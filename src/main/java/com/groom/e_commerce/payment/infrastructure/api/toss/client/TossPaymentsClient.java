@@ -2,6 +2,7 @@ package com.groom.e_commerce.payment.infrastructure.api.toss.client;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,7 @@ public class TossPaymentsClient {
 		return tossWebClient.post()
 			.uri("/v1/payments/confirm")
 			.header(HttpHeaders.AUTHORIZATION, basicAuth(secretKey))
+			.header("Idempotency-Key", UUID.randomUUID().toString())
 			.contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON)
 			.bodyValue(request)
