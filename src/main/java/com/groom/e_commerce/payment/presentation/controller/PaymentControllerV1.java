@@ -11,10 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groom.e_commerce.payment.application.port.in.CancelPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ConfirmPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.GetPaymentUseCase;
+import com.groom.e_commerce.payment.application.port.in.ReadyPaymentUseCase;
 import com.groom.e_commerce.payment.presentation.dto.request.ReqCancelPaymentV1;
 import com.groom.e_commerce.payment.presentation.dto.request.ReqConfirmPaymentV1;
+import com.groom.e_commerce.payment.presentation.dto.request.ReqReadyPaymentV1;
 import com.groom.e_commerce.payment.presentation.dto.response.ResCancelResultV1;
 import com.groom.e_commerce.payment.presentation.dto.response.ResPaymentV1;
+import com.groom.e_commerce.payment.presentation.dto.response.ResReadyPaymentV1;
 
 import jakarta.validation.Valid;
 
@@ -25,13 +28,24 @@ public class PaymentControllerV1 {
 	private final ConfirmPaymentUseCase confirmPaymentUseCase;
 	private final CancelPaymentUseCase cancelPaymentUseCase;
 	private final GetPaymentUseCase getPaymentUseCase;
+	private final ReadyPaymentUseCase readyPaymentUseCase;
 
-	public PaymentControllerV1(ConfirmPaymentUseCase confirmPaymentUseCase,
+	public PaymentControllerV1(
+		ConfirmPaymentUseCase confirmPaymentUseCase,
 		CancelPaymentUseCase cancelPaymentUseCase,
-		GetPaymentUseCase getPaymentUseCase) {
+		GetPaymentUseCase getPaymentUseCase,
+		ReadyPaymentUseCase readyPaymentUseCase
+	) {
 		this.confirmPaymentUseCase = confirmPaymentUseCase;
 		this.cancelPaymentUseCase = cancelPaymentUseCase;
 		this.getPaymentUseCase = getPaymentUseCase;
+		this.readyPaymentUseCase = readyPaymentUseCase;
+	}
+
+	// 결제 준비(리다이렉트 결제에 필요한 파라미터 반환)
+	@PostMapping("/ready")
+	public ResponseEntity<ResReadyPaymentV1> ready(@Valid @RequestBody ReqReadyPaymentV1 request) {
+		return ResponseEntity.ok(readyPaymentUseCase.ready(request));
 	}
 
 	// 결제 승인(토스 confirm)
@@ -54,8 +68,10 @@ public class PaymentControllerV1 {
 
 	// 결제 취소(토스 cancel)
 	@PostMapping("/{paymentKey}/cancel")
-	public ResponseEntity<ResCancelResultV1> cancel(@PathVariable String paymentKey,
-		@Valid @RequestBody ReqCancelPaymentV1 request) {
+	public ResponseEntity<ResCancelResultV1> cancel(
+		@PathVariable String paymentKey,
+		@Valid @RequestBody ReqCancelPaymentV1 request
+	) {
 		return ResponseEntity.ok(cancelPaymentUseCase.cancel(paymentKey, request));
 	}
 }
