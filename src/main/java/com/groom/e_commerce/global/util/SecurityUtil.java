@@ -1,0 +1,30 @@
+package com.groom.e_commerce.global.util;
+
+import java.util.UUID;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
+
+@Component
+public class SecurityUtil {
+
+	public static UUID getCurrentUserId() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+		if (auth == null || !auth.isAuthenticated()) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED);
+		}
+		// ----
+		// JWT subject에서 userId 추출
+		//return UUID.fromString(auth.getName());
+		// ----
+
+		CustomUserDetails userDetails = (CustomUserDetails)auth.getPrincipal();
+		return userDetails.getUserId();
+	}
+}
