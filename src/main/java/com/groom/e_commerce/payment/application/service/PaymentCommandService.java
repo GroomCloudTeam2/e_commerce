@@ -13,7 +13,6 @@ import com.groom.e_commerce.payment.application.port.out.OrderQueryPort;
 import com.groom.e_commerce.payment.application.port.out.TossPaymentPort;
 import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.entity.PaymentCancel;
-import com.groom.e_commerce.payment.domain.model.PaymentMethod;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
 import com.groom.e_commerce.payment.infrastructure.api.toss.config.TossPaymentsProperties;
@@ -32,6 +31,8 @@ import com.groom.e_commerce.payment.presentation.exception.PaymentException;
 @Service
 @Transactional
 public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPaymentUseCase, ReadyPaymentUseCase {
+
+	private static final String PG_PROVIDER_TOSS = "toss";
 
 	private final PaymentRepository paymentRepository;
 	private final TossPaymentPort tossPaymentPort;
@@ -54,11 +55,9 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 	 * ✅ 결제 준비(READY)
 	 * - 주문 존재 확인(Port)
 	 * - 금액 위변조 검증 (서버 기준)
-	 * - 결제 레코드 존재 확인(주문 생성 시 Payment READY가 이미 생성돼있다는 전제)
+	 * - 결제 레코드 존재 확인(주문 1 : 결제 1, READY 레코드가 이미 존재한다는 전제)
 	 * - 결제 상태 READY 확인
 	 * - 토스 결제창 호출에 필요한 값(clientKey/successUrl/failUrl) 반환
-	 *
-	 * ⚠️ paymentKey는 이 단계에서 없음 (토스 결제 인증 후 successUrl redirect로 넘어올 때 생김)
 	 */
 	@Override
 	@Transactional(readOnly = true)
@@ -71,10 +70,8 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 		try {
 			order = orderQueryPort.getOrderSummary(orderId);
 		} catch (PaymentException e) {
-			// Port 구현에서 PaymentException 던지는 경우 그대로 전파
 			throw e;
 		} catch (Exception e) {
-			// Port 구현체가 어떤 예외를 던져도 결제쪽에서는 일관된 에러로 변환
 			throw new PaymentException(
 				HttpStatus.NOT_FOUND,
 				"ORDER_NOT_FOUND",
@@ -82,7 +79,7 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			);
 		}
 
-		// 2) 금액 검증 (주문 총액 vs 요청 amount)
+		// 2) 금액 검증
 		long orderTotal = order.totalPaymentAmt();
 		if (orderTotal != requestAmount) {
 			throw new PaymentException(
@@ -100,7 +97,7 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 				"결제 준비 정보를 찾을 수 없습니다."
 			));
 
-		// 4) 상태 READY 확인
+		// 4) READY 상태 확인
 		if (payment.getStatus() != PaymentStatus.READY) {
 			throw new PaymentException(
 				HttpStatus.CONFLICT,
@@ -109,7 +106,15 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			);
 		}
 
-		// 5) 결제창 표시용 이름들 (Port로 받은 값 사용)
+		// (선택) 내부 amount가 주문 금액과 일치하는지 2차 검증
+		if (!payment.getAmount().equals(requestAmount)) {
+			throw new PaymentException(
+				HttpStatus.CONFLICT,
+				"PAYMENT_AMOUNT_MISMATCH",
+				"결제 준비 금액이 주문 금액과 일치하지 않습니다."
+			);
+		}
+
 		String orderName = "주문 " + order.orderNumber();
 		String customerName = order.recipientName();
 
@@ -124,39 +129,74 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 		);
 	}
 
+	/**
+	 * ✅ 결제 승인(confirm)
+	 * - (권장) orderId 기준으로 Payment(READY) 찾고 금액 검증
+	 * - 토스 confirm 호출
+	 * - paymentKey/approvedAt 저장 + status PAID로 변경
+	 *
+	 * ⚠️ ERD 100% 버전 Payment에는 method/currency/orderName/customerName/requestedAt 없음
+	 */
 	@Override
 	public ResPaymentV1 confirm(ReqConfirmPaymentV1 request) {
-		// 1) 내부 중복 방지(멱등)
-		Payment existing = paymentRepository.findByPaymentKey(request.paymentKey()).orElse(null);
-		if (existing != null && existing.isAlreadyDone()) {
-			return ResPaymentV1.from(existing);
+		UUID orderId = request.orderId();
+		Long requestAmount = request.amount();
+
+		// 1) 내부 Payment(READY) 조회 (주문 1 : 결제 1)
+		Payment payment = paymentRepository.findByOrderId(orderId)
+			.orElseThrow(() -> new PaymentException(
+				HttpStatus.NOT_FOUND,
+				"PAYMENT_NOT_FOUND",
+				"결제 정보를 찾을 수 없습니다."
+			));
+
+		// 2) 멱등 처리: 이미 PAID면 그대로 반환
+		if (payment.isAlreadyPaid()) {
+			return ResPaymentV1.from(payment);
+		}
+		if (payment.isAlreadyCancelled()) {
+			throw new PaymentException(
+				HttpStatus.CONFLICT,
+				"ALREADY_CANCELLED",
+				"이미 취소된 결제입니다."
+			);
 		}
 
-		// 2) 토스 승인 호출
+		// 3) 금액 위변조 검증 (내부 결제 amount vs 요청 amount)
+		if (!payment.getAmount().equals(requestAmount)) {
+			throw new PaymentException(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_AMOUNT",
+				"결제 요청 금액이 서버 금액과 일치하지 않습니다."
+			);
+		}
+
+		// 4) 토스 승인 호출
 		TossPaymentResponse toss = tossPaymentPort.confirm(
-			new TossConfirmRequest(request.paymentKey(), request.orderId(), request.amount())
+			new TossConfirmRequest(request.paymentKey(), orderId.toString(), requestAmount)
 		);
 
-		// 3) 내부 저장/업데이트
-		Payment payment = existing;
-		if (payment == null) {
-			payment = new Payment(toss.orderId(), toss.paymentKey(), toss.totalAmount());
+		// 5) (선택) 토스 응답 금액 검증
+		if (toss.totalAmount() != null && !toss.totalAmount().equals(requestAmount)) {
+			throw new PaymentException(
+				HttpStatus.BAD_GATEWAY,
+				"PAYMENT_CONFIRM_AMOUNT_MISMATCH",
+				"PG 승인 금액이 요청 금액과 일치하지 않습니다."
+			);
 		}
 
-		payment.markApproved(
-			toss.totalAmount(),
-			mapMethod(toss.method()),
-			toss.currency(),
-			toss.orderName(),
-			toss.customerName(),
-			toss.requestedAt(),
-			toss.approvedAt()
-		);
+		// 6) 내부 상태 업데이트 (ERD 기준)
+		payment.markPaid(toss.paymentKey(), toss.approvedAt());
 
 		Payment saved = paymentRepository.save(payment);
 		return ResPaymentV1.from(saved);
 	}
 
+	/**
+	 * ✅ 결제 취소(cancel)
+	 * - 취소 누적합은 PaymentCancel 합산으로 계산 (ERD에 canceled_amount 없음)
+	 * - 남은 금액 = amount - getCanceledAmount()
+	 */
 	@Override
 	public ResCancelResultV1 cancel(String paymentKey, ReqCancelPaymentV1 request) {
 		Payment payment = paymentRepository.findByPaymentKey(paymentKey)
@@ -166,20 +206,23 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 				"결제 정보를 찾을 수 없습니다."
 			));
 
-		if (payment.getStatus().name().equals("CANCELED")) {
-			throw new PaymentException(HttpStatus.CONFLICT, "ALREADY_CANCELED", "이미 전액 취소된 결제입니다.");
+		if (payment.isAlreadyCancelled()) {
+			throw new PaymentException(
+				HttpStatus.CONFLICT,
+				"ALREADY_CANCELLED",
+				"이미 전액 취소된 결제입니다."
+			);
+
 		}
 
 		// 부분취소 검증
-		Long cancelAmount =
-			request.cancelAmount() == null
-				? (payment.getApprovedAmount() - payment.getCanceledAmount())
-				: request.cancelAmount();
+		long remaining = payment.getAmount() - payment.getCanceledAmount();
+		Long cancelAmount = (request.cancelAmount() == null) ? remaining : request.cancelAmount();
 
-		if (cancelAmount <= 0) {
+		if (cancelAmount == null || cancelAmount <= 0) {
 			throw new PaymentException(HttpStatus.BAD_REQUEST, "INVALID_CANCEL_AMOUNT", "취소 금액이 올바르지 않습니다.");
 		}
-		if (payment.getCanceledAmount() + cancelAmount > payment.getApprovedAmount()) {
+		if (cancelAmount > remaining) {
 			throw new PaymentException(HttpStatus.BAD_REQUEST, "EXCEED_CANCEL_AMOUNT", "취소 가능 금액을 초과했습니다.");
 		}
 
@@ -189,30 +232,21 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			new TossCancelRequest(request.cancelReason(), cancelAmount)
 		);
 
-		// 토스 응답에서 취소 이력 1건을 대표로 저장
+		// 취소 이력 저장
 		PaymentCancel cancel = new PaymentCancel(
 			tossCancel.paymentKey(),
 			cancelAmount,
 			request.cancelReason(),
 			tossCancel.canceledAt()
 		);
-		payment.addCancel(cancel);
+		payment.addCancel(cancel); // 전액 취소면 내부에서 status CANCELLED로 바뀜
 
 		Payment saved = paymentRepository.save(payment);
 
-		return ResCancelResultV1.of(saved.getPaymentKey(), saved.getStatus().name(), saved.getCanceledAmount());
-	}
-
-	private PaymentMethod mapMethod(String tossMethod) {
-		if (tossMethod == null) {
-			return PaymentMethod.UNKNOWN;
-		}
-		return switch (tossMethod.toUpperCase()) {
-			case "CARD" -> PaymentMethod.CARD;
-			case "EASY_PAY" -> PaymentMethod.EASY_PAY;
-			case "TRANSFER" -> PaymentMethod.TRANSFER;
-			case "MOBILE_PHONE" -> PaymentMethod.MOBILE;
-			default -> PaymentMethod.UNKNOWN;
-		};
+		return ResCancelResultV1.of(
+			saved.getPaymentKey(),
+			saved.getStatus().name(),
+			saved.getCanceledAmount()
+		);
 	}
 }

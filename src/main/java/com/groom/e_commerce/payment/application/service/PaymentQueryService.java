@@ -1,5 +1,7 @@
 package com.groom.e_commerce.payment.application.service;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,8 +41,25 @@ public class PaymentQueryService implements GetPaymentUseCase {
 
 	@Override
 	public ResPaymentV1 getByOrderId(String orderId) {
-		Payment payment = paymentRepository.findByOrderId(orderId)
-			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 정보를 찾을 수 없습니다."));
+		// ✅ orderId는 ERD 기준 UUID라서 변환
+		UUID orderUuid;
+		try {
+			orderUuid = UUID.fromString(orderId);
+		} catch (IllegalArgumentException e) {
+			throw new PaymentException(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_ORDER_ID",
+				"orderId 형식이 올바르지 않습니다. UUID 형식이어야 합니다."
+			);
+		}
+
+		Payment payment = paymentRepository.findByOrderId(orderUuid)
+			.orElseThrow(() -> new PaymentException(
+				HttpStatus.NOT_FOUND,
+				"PAYMENT_NOT_FOUND",
+				"결제 정보를 찾을 수 없습니다."
+			));
+
 		return ResPaymentV1.from(payment);
 	}
 }

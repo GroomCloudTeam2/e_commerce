@@ -1,6 +1,7 @@
 package com.groom.e_commerce.payment.domain.entity;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,28 +15,34 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "p_payment_cancel", indexes = {
-	@Index(name = "idx_cancel_payment_key", columnList = "paymentKey")
-})
+@Table(
+	name = "p_payment_cancel",
+	indexes = {
+		@Index(name = "idx_payment_cancel_payment_key", columnList = "payment_key"),
+		@Index(name = "idx_payment_cancel_payment_id", columnList = "payment_id")
+	}
+)
 public class PaymentCancel {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	private String cancelId;
+	@Column(name = "cancel_id", nullable = false)
+	private UUID cancelId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "payment_id", nullable = false)
 	private Payment payment;
 
-	@Column(nullable = false, length = 200)
+	@Column(name = "payment_key", nullable = false, length = 255)
 	private String paymentKey;
 
-	@Column(nullable = false)
+	@Column(name = "cancel_amount", nullable = false)
 	private Long cancelAmount;
 
-	@Column(nullable = false, length = 200)
+	@Column(name = "cancel_reason", nullable = false, length = 255)
 	private String cancelReason;
 
+	@Column(name = "canceled_at", nullable = false)
 	private OffsetDateTime canceledAt;
 
 	protected PaymentCancel() {
@@ -52,8 +59,9 @@ public class PaymentCancel {
 		this.payment = payment;
 	}
 
-	// getters
-	public String getCancelId() {
+	// ===== getters =====
+
+	public UUID getCancelId() {
 		return cancelId;
 	}
 

@@ -1,6 +1,7 @@
 package com.groom.e_commerce.payment.infrastructure.repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -27,12 +28,12 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 	}
 
 	@Override
-	public Optional<Payment> findById(String paymentId) {
+	public Optional<Payment> findById(UUID paymentId) {
 		return Optional.ofNullable(entityManager.find(Payment.class, paymentId));
 	}
 
 	@Override
-	public Optional<Payment> findByOrderId(String orderId) {
+	public Optional<Payment> findByOrderId(UUID orderId) {
 		return entityManager.createQuery(
 				"SELECT p FROM Payment p WHERE p.orderId = :orderId",
 				Payment.class
@@ -43,7 +44,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 	}
 
 	@Override
-	public boolean existsByOrderId(String orderId) {
+	public boolean existsByOrderId(UUID orderId) {
 		Long count = entityManager.createQuery(
 				"SELECT COUNT(p) FROM Payment p WHERE p.orderId = :orderId",
 				Long.class
@@ -65,7 +66,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 	}
 
 	@Override
-	public Optional<Payment> findByIdWithLock(String paymentId) {
+	public Optional<Payment> findByIdWithLock(UUID paymentId) {
 		return Optional.ofNullable(
 			entityManager.find(Payment.class, paymentId, LockModeType.PESSIMISTIC_WRITE)
 		);

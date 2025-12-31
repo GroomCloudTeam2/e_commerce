@@ -3,8 +3,8 @@ package com.groom.e_commerce.payment.domain.entity;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-import com.groom.e_commerce.payment.domain.model.PaymentMethod;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 
 import jakarta.persistence.CascadeType;
@@ -24,53 +24,57 @@ import jakarta.persistence.UniqueConstraint;
 @Table(
 	name = "p_payment",
 	indexes = {
-		@Index(name = "idx_payment_order_id", columnList = "orderId"),
-		@Index(name = "idx_payment_payment_key", columnList = "paymentKey")
+		@Index(name = "idx_payment_order_id", columnList = "order_id"),
+		@Index(name = "idx_payment_payment_key", columnList = "payment_key")
 	},
 	uniqueConstraints = {
-		@UniqueConstraint(name = "uk_payment_order_id", columnNames = "orderId"),
-		@UniqueConstraint(name = "uk_payment_payment_key", columnNames = "paymentKey")
+		@UniqueConstraint(name = "uk_payment_order_id", columnNames = "order_id"),
+		@UniqueConstraint(name = "uk_payment_payment_key", columnNames = "payment_key")
 	}
 )
 public class Payment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	private String paymentId;
+	@Column(name = "payment_id", nullable = false)
+	private UUID paymentId;
 
-	@Column(nullable = false, length = 100)
-	private String orderId;
+	@Column(name = "order_id", nullable = false)
+	private UUID orderId;
 
-	@Column(nullable = false, length = 200)
-	private String paymentKey;
+	/**
+	 * ERD: amount (결제 금액)
+	 * - READY 단계에서도 주문 금액이 확정되므로 NOT NULL로 둠
+	 */
+	@Column(name = "amount", nullable = false)
+	private Long amount;
 
-	@Column(nullable = false)
-	private Long totalAmount;
-
-	@Column(nullable = false)
-	private Long approvedAmount;
-
-	@Column(nullable = false)
-	private Long canceledAmount;
-
+	/**
+	 * ERD: status (READY / PAID / CANCELLED / FAILED)
+	 */
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 20)
+	@Column(name = "status", nullable = false, length = 20)
 	private PaymentStatus status;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 20)
-	private PaymentMethod method;
+	/**
+	 * ERD: pg_provider (toss 등) NOT NULL
+	 */
+	@Column(name = "pg_provider", nullable = false, length = 50)
+	private String pgProvider;
 
-	@Column(nullable = true, length = 50)
-	private String currency;
+	/**
+	 * ERD: payment_key (결제 완료 후 생성) => READY에서는 없을 수 있으니 nullable 허용
+	 * UQ는 유지 (DB에서 NULL 중복 허용이 일반적)
+	 */
+	@Column(name = "payment_key", nullable = true, length = 255)
+	private String paymentKey;
 
-	@Column(nullable = true, length = 50)
-	private String orderName;
-
-	@Column(nullable = true, length = 50)
-	private String customerName;
-
-	private OffsetDateTime requestedAt;
+	/**
+	 * ERD: approved_at (결제 승인 시각)
+	 * ERD가 TIMESTAMP면 LocalDateTime이 더 딱 맞고,
+	 * 너 기존 코드 흐름이 OffsetDateTime이면 이것도 OK.
+	 */
+	@Column(name = "approved_at", nullable = true)
 	private OffsetDateTime approvedAt;
 
 	@OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -79,89 +83,90 @@ public class Payment {
 	protected Payment() {
 	}
 
-	public Payment(String orderId, String paymentKey, Long totalAmount) {
+	/**
+	 * 주문 생성 시 결제(READY) 레코드 생성용 생성자
+	 */
+	public Payment(UUID orderId, Long amount, String pgProvider) {
 		this.orderId = orderId;
-		this.paymentKey = paymentKey;
-		this.totalAmount = totalAmount;
-		this.approvedAmount = 0L;
-		this.canceledAmount = 0L;
+		this.amount = amount;
+		this.pgProvider = pgProvider;
 		this.status = PaymentStatus.READY;
-		this.method = PaymentMethod.UNKNOWN;
+		this.paymentKey = null;
+		this.approvedAt = null;
 	}
 
-	public void markApproved(Long approvedAmount, PaymentMethod method, String currency, String orderName,
-		String customerName, OffsetDateTime requestedAt, OffsetDateTime approvedAt) {
-		this.approvedAmount = approvedAmount;
-		this.status = PaymentStatus.DONE;
-		this.method = method == null ? PaymentMethod.UNKNOWN : method;
-		this.currency = currency;
-		this.orderName = orderName;
-		this.customerName = customerName;
-		this.requestedAt = requestedAt;
+	/**
+	 * 결제 성공 처리 (Confirm 이후)
+	 * - paymentKey 세팅
+	 * - approvedAt 세팅
+	 * - status: PAID
+	 */
+	public void markPaid(String paymentKey, OffsetDateTime approvedAt) {
+		this.paymentKey = paymentKey;
 		this.approvedAt = approvedAt;
+		this.status = PaymentStatus.PAID;
 	}
 
-	public void addCancel(PaymentCancel cancel) {
-		cancels.add(cancel);
-		cancel.setPayment(this);
-		this.canceledAmount += cancel.getCancelAmount();
+	/**
+	 * 결제 실패 처리
+	 */
+	public void markFailed() {
+		this.status = PaymentStatus.FAILED;
+	}
 
-		if (this.canceledAmount >= this.approvedAmount) {
-			this.status = PaymentStatus.CANCELED;
+	/**
+	 * 취소 이력 추가 + 전액 취소면 CANCELLED로 변경
+	 *
+	 * ⚠️ ERD에 canceled_amount 컬럼이 없으므로
+	 * 취소 합계는 cancels 합산으로 계산한다.
+	 */
+	public void addCancel(PaymentCancel cancel) {
+		this.cancels.add(cancel);
+		cancel.setPayment(this);
+
+		if (getCanceledAmount() >= this.amount) {
+			this.status = PaymentStatus.CANCELLED;
 		}
 	}
 
-	public boolean isAlreadyDone() {
-		return this.status == PaymentStatus.DONE || this.status == PaymentStatus.CANCELED;
+	public long getCanceledAmount() {
+		return this.cancels.stream()
+			.mapToLong(PaymentCancel::getCancelAmount)
+			.sum();
 	}
 
-	// getters
-	public String getPaymentId() {
+	public boolean isAlreadyPaid() {
+		return this.status == PaymentStatus.PAID;
+	}
+
+	public boolean isAlreadyCancelled() {
+		return this.status == PaymentStatus.CANCELLED;
+	}
+
+	// ===== getters =====
+
+	public UUID getPaymentId() {
 		return paymentId;
 	}
 
-	public String getOrderId() {
+	public UUID getOrderId() {
 		return orderId;
 	}
 
-	public String getPaymentKey() {
-		return paymentKey;
-	}
-
-	public Long getTotalAmount() {
-		return totalAmount;
-	}
-
-	public Long getApprovedAmount() {
-		return approvedAmount;
-	}
-
-	public Long getCanceledAmount() {
-		return canceledAmount;
+	public Long getAmount() {
+		return amount;
 	}
 
 	public PaymentStatus getStatus() {
 		return status;
 	}
 
-	public PaymentMethod getMethod() {
-		return method;
+	public String getPgProvider() {
+		return pgProvider;
 	}
 
-	public String getCurrency() {
-		return currency;
-	}
-
-	public String getOrderName() {
-		return orderName;
-	}
-
-	public String getCustomerName() {
-		return customerName;
-	}
-
-	public OffsetDateTime getRequestedAt() {
-		return requestedAt;
+	public String getPaymentKey() {
+		return paymentKey;
 	}
 
 	public OffsetDateTime getApprovedAt() {
