@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import com.groom.e_commerce.payment.application.port.out.OrderQueryPort;
 
 @Component
-@Profile({"local", "dev"})
 public class StubOrderQueryAdapter implements OrderQueryPort {
 
 	@Override
