@@ -21,6 +21,12 @@ spring:
     console:
       enabled: true
 
+  security:
+    user:
+      name: user
+      password: 1234
+
+
 jwt:
   secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
   access-token-validity: 3600000  # 1시간 (밀리초)
@@ -34,6 +40,7 @@ logging:
 toss:
   payments:
     base-url: https://api.tosspayments.com
-    secret-key: ${TOSS_SECRET_KEY:}   # 환경변수로 주기
+    secret-key: ${TOSS_PAYMENTS_SECRET_KEY:}
     connect-timeout-ms: 3000
     read-timeout-ms: 5000
+
