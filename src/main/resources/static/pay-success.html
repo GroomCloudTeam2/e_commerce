@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>결제 성공 - confirm 자동 호출</title>
+</head>
+<body>
+<h2>결제 인증 성공</h2>
+<pre id="log" style="background:#f6f6f6;padding:12px;white-space:pre-wrap;"></pre>
+
+<script>
+    const $log = document.getElementById("log");
+    const log = (...args) => { $log.textContent += args.join(" ") + "\n"; };
+
+    (async () => {
+        const params = new URLSearchParams(location.search);
+        const paymentKey = params.get("paymentKey");
+        const orderId = params.get("orderId");
+        const amount = params.get("amount");
+
+        log("query:", location.search);
+        log("paymentKey:", paymentKey);
+        log("orderId:", orderId);
+        log("amount:", amount);
+
+        if (!paymentKey || !orderId || !amount) {
+            log("필수 파라미터 누락. (paymentKey/orderId/amount)");
+            return;
+        }
+
+        log("\n[1] /api/v1/payments/confirm 자동 호출 중...");
+        const confirmRes = await fetch("/api/v1/payments/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                paymentKey,
+                orderId,
+                amount: Number(amount)
+            })
+        });
+
+        const bodyText = await confirmRes.text();
+
+        if (!confirmRes.ok) {
+            log("CONFIRM 실패:", confirmRes.status);
+            log(bodyText);
+            return;
+        }
+
+        log("[2] CONFIRM 성공!");
+        log(bodyText);
+    })();
+</script>
+</body>
+</html>

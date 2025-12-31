@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>결제 실패</title>
+</head>
+<body>
+<h2>결제 실패</h2>
+<pre id="log" style="background:#f6f6f6;padding:12px;white-space:pre-wrap;"></pre>
+
+<script>
+    const params = new URLSearchParams(location.search);
+    const obj = Object.fromEntries(params.entries());
+    document.getElementById("log").textContent = JSON.stringify(obj, null, 2);
+</script>
+</body>
+</html>

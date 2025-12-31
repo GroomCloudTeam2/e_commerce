@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Toss 결제 테스트</title>
+</head>
+<body>
+<h2>토스 결제 테스트 (프론트 없이 static HTML)</h2>
+
+<div style="display:flex;flex-direction:column;gap:8px;max-width:520px;">
+    <label>orderId(UUID)</label>
+    <input id="orderId" placeholder="예: 550e8400-e29b-41d4-a716-446655440000" />
+
+    <label>amount</label>
+    <input id="amount" type="number" min="1" placeholder="예: 15000" />
+
+    <button id="btn">결제하기</button>
+    <pre id="log" style="background:#f6f6f6;padding:12px;white-space:pre-wrap;"></pre>
+</div>
+
+<!-- ✅ TossPayments SDK (v2, 표준 결제창) -->
+<script src="https://js.tosspayments.com/v2/standard"></script> <!-- :contentReference[oaicite:1]{index=1} -->
+
+<script>
+    const $log = document.getElementById("log");
+    const log = (...args) => { $log.textContent += args.join(" ") + "\n"; };
+
+    document.getElementById("btn").addEventListener("click", async () => {
+        $log.textContent = "";
+
+        const orderId = document.getElementById("orderId").value.trim();
+        const amount = Number(document.getElementById("amount").value);
+
+        if (!orderId) return log("orderId를 입력해줘");
+        if (!amount || amount < 1) return log("amount를 1 이상으로 입력해줘");
+
+        log("[1] /api/v1/payments/ready 호출 중...");
+        const readyRes = await fetch("/api/v1/payments/ready", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId, amount })
+        });
+
+        if (!readyRes.ok) {
+            const err = await readyRes.text();
+            log("READY 실패:", readyRes.status, err);
+            return;
+        }
+
+        const ready = await readyRes.json();
+        log("[2] READY 응답:", JSON.stringify(ready, null, 2));
+
+        // ✅ 토스 결제창 열기
+        // 가이드: clientKey로 초기화 후 requestPayment() 호출 :contentReference[oaicite:2]{index=2}
+        const tossPayments = TossPayments(ready.clientKey);
+        const payment = tossPayments.payment({ customerKey: "test-customer-key" });
+
+        log("[3] 결제창 요청 시작...");
+        await payment.requestPayment({
+            method: "CARD",
+            amount: {
+                currency: "KRW",
+                value: ready.amount
+            },
+            orderId: ready.orderId,
+            orderName: ready.orderName,
+            customerName: ready.customerName,
+            successUrl: ready.successUrl,
+            failUrl: ready.failUrl
+        });
+    });
+</script>
+</body>
+</html>
