@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
+import com.groom.e_commerce.global.util.SecurityUtil;
 import com.groom.e_commerce.user.domain.entity.PeriodType;
 import com.groom.e_commerce.user.domain.entity.UserEntity;
 import com.groom.e_commerce.user.domain.entity.UserRole;
@@ -32,12 +33,14 @@ public class UserServiceV1 {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 
-	public ResUserDtoV1 getMe(UUID userId) {
+	public ResUserDtoV1 getMe() {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		return ResUserDtoV1.from(findUserById(userId));
 	}
 
 	@Transactional
-	public void updateMe(UUID userId, ReqUpdateUserDtoV1 request) {
+	public void updateMe(ReqUpdateUserDtoV1 request) {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
 		if (StringUtils.hasText(request.getNickname())) {
@@ -57,7 +60,8 @@ public class UserServiceV1 {
 	}
 
 	@Transactional
-	public void deleteMe(UUID userId) {
+	public void deleteMe() {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
 		if (user.isWithdrawn()) {
@@ -68,7 +72,8 @@ public class UserServiceV1 {
 		log.info("User withdrew: {}", userId);
 	}
 
-	public List<ResSalesStatDtoV1> getSalesStats(UUID userId, PeriodType periodType, LocalDate date) {
+	public List<ResSalesStatDtoV1> getSalesStats(PeriodType periodType, LocalDate date) {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
 		if (user.getRole() != UserRole.OWNER) {
