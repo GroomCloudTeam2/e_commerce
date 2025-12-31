@@ -1,6 +1,10 @@
 package com.groom.ecommerce.review.domain.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -28,6 +32,15 @@ public class ProductRatingEntity {
 	@Column(name = "AI_review", columnDefinition = "TEXT")
 	private String aiReview; // 추후 LLM을 통해 생성될 리뷰 요약. 현재는 NULL값 입력
 
+	@Version
+	private Long version;
+
+	@CreatedDate
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime createdAt;
+
+	@LastModifiedDate
+	private LocalDateTime updatedAt;
 
 	public ProductRatingEntity(UUID productId) {
 		this.productId = productId;
@@ -43,7 +56,7 @@ public class ProductRatingEntity {
 	}
 
 	public void removeRating(Integer oldRating) {
-		if (this.reviewCount <= 1) {
+		if (this.reviewCount < 1) {
 			this.reviewCount = 0;
 			this.avgRating = 0.0;
 			return;
