@@ -30,7 +30,16 @@ public enum ErrorCode {
     ALREADY_DEFAULT_ADDRESS(HttpStatus.CONFLICT, "ALREADY_DEFAULT_ADDRESS", "이미 기본 배송지로 설정되어 있습니다."),
 
     // Product
-    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND", "카테고리를 찾을 수 없습니다.");
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND", "상품을 찾을 수 없습니다."),
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND", "카테고리를 찾을 수 없습니다."),
+    VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "VARIANT_NOT_FOUND", "상품 옵션(SKU)을 찾을 수 없습니다."),
+    DUPLICATE_SKU_CODE(HttpStatus.CONFLICT, "DUPLICATE_SKU_CODE", "이미 존재하는 SKU 코드입니다."),
+    PRODUCT_NOT_ON_SALE(HttpStatus.BAD_REQUEST, "PRODUCT_NOT_ON_SALE", "판매 중인 상품이 아닙니다."),
+    PRODUCT_ALREADY_SUSPENDED(HttpStatus.CONFLICT, "PRODUCT_ALREADY_SUSPENDED", "이미 판매 정지된 상품입니다."),
+    PRODUCT_NOT_SUSPENDED(HttpStatus.BAD_REQUEST, "PRODUCT_NOT_SUSPENDED", "판매 정지 상태가 아닙니다."),
+    PRODUCT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "PRODUCT_ACCESS_DENIED", "해당 상품에 대한 접근 권한이 없습니다."),
+    STOCK_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "STOCK_NOT_ENOUGH", "재고가 부족합니다."),
+    PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "PRODUCT_HAS_ORDERS", "주문이 존재하는 상품은 삭제할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
