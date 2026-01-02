@@ -10,11 +10,11 @@ import java.util.Map;
 @Component
 public class AiReviewPromptBuilder {
 
-    public String build(Map<ReviewCategory, List<ReviewEntity>> reviews) {
+    public String build(String productTitle, Map<ReviewCategory, List<ReviewEntity>> reviews) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("""
-        다음은 하나의 상품에 대한 사용자 리뷰입니다.
+        다음은 상품 "%s" 대한 사용자 리뷰입니다.
         카테고리별 핵심 의견을 요약하세요.
         과장하지 말고, 공통된 의견 위주로 작성하세요.
         결과는 JSON 형식으로 반환하세요.
@@ -28,7 +28,7 @@ public class AiReviewPromptBuilder {
         }
 
         리뷰 목록:
-        """);
+        """.formatted(productTitle));
 
         reviews.forEach((category, list) -> {
             sb.append("\n[").append(category.name()).append("]\n");

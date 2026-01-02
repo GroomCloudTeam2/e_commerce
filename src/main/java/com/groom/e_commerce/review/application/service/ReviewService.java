@@ -1,6 +1,7 @@
 package com.groom.e_commerce.review.application.service;
 
 import com.groom.e_commerce.global.infrastructure.client.AiRestClient;
+import com.groom.e_commerce.review.application.validator.OrderReviewValidator;
 import com.groom.e_commerce.review.domain.entity.ProductRatingEntity;
 import com.groom.e_commerce.review.domain.entity.ReviewCategory;
 import com.groom.e_commerce.review.domain.entity.ReviewEntity;
@@ -36,6 +37,7 @@ public class ReviewService {
 	private final ReviewLikeRepository reviewLikeRepository;
 	private final ProductRatingRepository productRatingRepository;
 	private final AiRestClient aiRestClient;
+	private final OrderReviewValidator orderReviewValidator;
 
 	/**
 	 * 리뷰 작성
@@ -47,15 +49,14 @@ public class ReviewService {
 		UUID currentUserId,
 		CreateReviewRequest request
 	) {
-		// 1. 중복 리뷰 체크
-		reviewRepository.findByOrderIdAndProductId(orderId, productId)
-			.ifPresent(r -> {
-				throw new IllegalStateException("이미 리뷰가 존재합니다.");
-			});
+		// 0. 주문/상품/유저 검증 (신규)
+		orderReviewValidator.validate(orderId, productId, currentUserId);
 
+
+		// 2. AI 카테고리 분류
 		ReviewCategory category = classifyComment(request.getContent());
 
-		// 3. 리뷰 엔티티 생성 및 저장
+		// 3. 리뷰 저장
 		ReviewEntity review = ReviewEntity.builder()
 			.orderId(orderId)
 			.productId(productId)
@@ -68,14 +69,16 @@ public class ReviewService {
 		reviewRepository.save(review);
 
 		// 4. 상품 평점 업데이트
-		ProductRatingEntity ratingEntity = productRatingRepository.findByProductId(productId)
-			.orElseGet(() -> new ProductRatingEntity(productId));
+		ProductRatingEntity ratingEntity =
+			productRatingRepository.findByProductId(productId)
+				.orElseGet(() -> new ProductRatingEntity(productId));
 
 		ratingEntity.updateRating(request.getRating());
 		productRatingRepository.save(ratingEntity);
 
 		return ReviewResponse.fromEntity(review);
 	}
+
 
 	/**
 	 * 리뷰 수정

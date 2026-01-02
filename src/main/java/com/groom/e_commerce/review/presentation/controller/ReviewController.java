@@ -28,7 +28,6 @@ public class ReviewController {
 		@PathVariable UUID productId,
 		@RequestBody CreateReviewRequest request
 	) {
-		System.out.println("여기는 오니?");
 		UUID userId = SecurityUtil.getCurrentUserId();
 		return reviewService.createReview(orderId, productId, userId, request);
 	}

@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.groom.e_commerce.global.infrastructure.client.OpenAi.OpenAiRestClient;
+import com.groom.e_commerce.product.domain.repository.ProductRepository;
 import com.groom.e_commerce.review.application.support.AiReviewPromptBuilder;
 import com.groom.e_commerce.review.domain.entity.ProductRatingEntity;
 import com.groom.e_commerce.review.domain.entity.ReviewCategory;
@@ -29,6 +30,7 @@ public class ReviewAiSummaryService {
 	private final ProductRatingRepository productRatingRepository;
 	private final AiReviewPromptBuilder promptBuilder;
 	private final OpenAiRestClient openAiRestClient;
+	private final ProductRepository productRepository;
 
 	public void generate(UUID productId) {
 
@@ -43,8 +45,8 @@ public class ReviewAiSummaryService {
 							PageRequest.of(0, 10)
 						)
 					));
-
-		String prompt = promptBuilder.build(reviews);
+		String productTitle= String.valueOf(productRepository.findTitleById(productId));
+		String prompt = promptBuilder.build(productTitle,reviews);
 		String aiReview = openAiRestClient.summarizeReviews(prompt);
 
 		ProductRatingEntity rating = productRatingRepository
@@ -52,5 +54,7 @@ public class ReviewAiSummaryService {
 			.orElseThrow();
 
 		rating.updateAiReview(aiReview);
+		productRatingRepository.save(rating);
+
 	}
 }

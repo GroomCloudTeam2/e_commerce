@@ -20,7 +20,7 @@ spring:
 ai:
   openai:
     base-url: https://api.openai.com
-    api-key: ${OPENAI_API_KEY}
+    api-key: dummy #${OPENAI_API_KEY}
     model: gpt-4o-mini
 
 
