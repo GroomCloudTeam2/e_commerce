@@ -129,6 +129,15 @@ public class Product {
 		}
 		if (stockQuantity != null) {
 			this.stockQuantity = stockQuantity;
+			syncStatusWithStock();
+		}
+	}
+
+	private void syncStatusWithStock() {
+		if (this.stockQuantity != null && this.stockQuantity == 0 && this.status == ProductStatus.ON_SALE) {
+			this.status = ProductStatus.SOLD_OUT;
+		} else if (this.stockQuantity != null && this.stockQuantity > 0 && this.status == ProductStatus.SOLD_OUT) {
+			this.status = ProductStatus.ON_SALE;
 		}
 	}
 
