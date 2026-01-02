@@ -4,15 +4,350 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>결제 실패</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+            background: #f7f7f7;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 16px 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .fail-icon {
+            width: 80px;
+            height: 80px;
+            background: #f44336;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 24px;
+            animation: shakeIn 0.5s ease;
+        }
+
+        @keyframes shakeIn {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .fail-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .fail-message {
+            text-align: center;
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px 20px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 20px;
+        }
+
+        .error-box {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .error-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #c62828;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            font-size: 14px;
+            color: #d32f2f;
+            line-height: 1.5;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #111;
+            text-align: right;
+            word-break: break-all;
+            margin-left: 20px;
+        }
+
+        .help-section {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+
+        .help-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1565c0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .help-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .help-list li {
+            font-size: 14px;
+            color: #1976d2;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .help-list li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+        }
+
+        .log-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .log-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .log-content {
+            background: #f5f5f5;
+            border-radius: 4px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #log {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-retry {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-retry:hover {
+            background: #3367d6;
+        }
+
+        .btn-home {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .btn-home:hover {
+            background: #f5f5f5;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 12px;
+            }
+
+            .section {
+                padding: 20px 16px;
+            }
+
+            .fail-title {
+                font-size: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>결제 실패</h2>
-<pre id="log" style="background:#f6f6f6;padding:12px;white-space:pre-wrap;"></pre>
+<div class="header">
+    <div class="header-title">결제 실패</div>
+</div>
+
+<div class="container">
+    <div class="fail-icon">✕</div>
+    <h1 class="fail-title">결제를 완료하지 못했습니다</h1>
+    <p class="fail-message">결제 처리 중 문제가 발생했습니다</p>
+
+    <div class="section">
+        <div class="section-title">실패 정보</div>
+        <div class="error-box">
+            <div class="error-title" id="errorCode">오류 코드: -</div>
+            <div class="error-message" id="errorMessage">오류 메시지를 불러오는 중...</div>
+        </div>
+        <div id="errorDetails"></div>
+    </div>
+
+    <div class="help-section">
+        <div class="help-title">💡 이런 경우를 확인해보세요</div>
+        <ul class="help-list">
+            <li>카드 한도가 부족하거나 사용이 정지된 경우</li>
+            <li>카드 정보를 잘못 입력한 경우</li>
+            <li>본인 인증이 실패한 경우</li>
+            <li>일시적인 네트워크 오류가 발생한 경우</li>
+        </ul>
+    </div>
+
+    <div class="log-container">
+        <div class="log-header">
+            <div class="log-title">상세 오류 정보</div>
+        </div>
+        <div class="log-content">
+            <pre id="log"></pre>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button class="btn btn-retry" onclick="history.back()">다시 시도</button>
+        <button class="btn btn-home" onclick="window.location.href='/'">홈으로</button>
+    </div>
+</div>
 
 <script>
     const params = new URLSearchParams(location.search);
     const obj = Object.fromEntries(params.entries());
+
+    // 로그에 전체 정보 표시
     document.getElementById("log").textContent = JSON.stringify(obj, null, 2);
+
+    // 주요 오류 정보 추출
+    const errorCode = obj.code || obj.errorCode || "UNKNOWN";
+    const errorMessage = obj.message || obj.errorMessage || "알 수 없는 오류가 발생했습니다";
+
+    document.getElementById("errorCode").textContent = `오류 코드: ${errorCode}`;
+    document.getElementById("errorMessage").textContent = errorMessage;
+
+    // 추가 상세 정보가 있으면 표시
+    const detailsContainer = document.getElementById("errorDetails");
+    const importantFields = ['orderId', 'orderName', 'amount'];
+
+    importantFields.forEach(field => {
+        if (obj[field]) {
+            const row = document.createElement('div');
+            row.className = 'info-row';
+
+            const label = document.createElement('span');
+            label.className = 'info-label';
+            label.textContent = field === 'orderId' ? '주문번호' :
+                field === 'orderName' ? '주문명' :
+                    field === 'amount' ? '결제금액' : field;
+
+            const value = document.createElement('span');
+            value.className = 'info-value';
+            value.textContent = field === 'amount' ?
+                Number(obj[field]).toLocaleString('ko-KR') + '원' :
+                obj[field];
+
+            row.appendChild(label);
+            row.appendChild(value);
+            detailsContainer.appendChild(row);
+        }
+    });
 </script>
 </body>
 </html>

@@ -3,15 +3,306 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>결제 성공 - confirm 자동 호출</title>
+    <title>결제 완료</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+            background: #f7f7f7;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 16px 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #4285f4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 24px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .success-message {
+            text-align: center;
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px 20px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #111;
+            text-align: right;
+            word-break: break-all;
+            margin-left: 20px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        .status-badge.processing {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .status-badge.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .log-section {
+            margin-top: 12px;
+        }
+
+        .log-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .log-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .log-content {
+            background: #f5f5f5;
+            border-radius: 4px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #log {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+        }
+
+        .btn-home {
+            width: 100%;
+            padding: 16px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+        }
+
+        .btn-home:hover {
+            background: #3367d6;
+        }
+
+        .btn-home:active {
+            transform: scale(0.98);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e65100;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 12px;
+            }
+
+            .section {
+                padding: 20px 16px;
+            }
+
+            .success-title {
+                font-size: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>결제 인증 성공</h2>
-<pre id="log" style="background:#f6f6f6;padding:12px;white-space:pre-wrap;"></pre>
+<div class="header">
+    <div class="header-title">결제 완료</div>
+</div>
+
+<div class="container">
+    <div class="success-icon">✓</div>
+    <h1 class="success-title">결제 처리 중</h1>
+    <p class="success-message">결제 승인을 확인하고 있습니다...</p>
+
+    <div class="section">
+        <div class="section-title">결제 정보</div>
+        <div class="info-row">
+            <span class="info-label">결제 상태</span>
+            <span class="info-value">
+                <span class="status-badge processing" id="statusBadge">
+                    처리중<span class="spinner"></span>
+                </span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">주문번호</span>
+            <span class="info-value" id="orderIdDisplay">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">결제금액</span>
+            <span class="info-value" id="amountDisplay">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">결제키</span>
+            <span class="info-value" id="paymentKeyDisplay">-</span>
+        </div>
+    </div>
+
+    <div class="log-section">
+        <div class="log-container">
+            <div class="log-header">
+                <div class="log-title">처리 로그</div>
+            </div>
+            <div class="log-content">
+                <pre id="log"></pre>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-home" onclick="window.location.href='/'">홈으로 돌아가기</button>
+</div>
 
 <script>
     const $log = document.getElementById("log");
-    const log = (...args) => { $log.textContent += args.join(" ") + "\n"; };
+    const $statusBadge = document.getElementById("statusBadge");
+    const $orderIdDisplay = document.getElementById("orderIdDisplay");
+    const $amountDisplay = document.getElementById("amountDisplay");
+    const $paymentKeyDisplay = document.getElementById("paymentKeyDisplay");
+    const $successTitle = document.querySelector(".success-title");
+    const $successMessage = document.querySelector(".success-message");
+
+    const log = (...args) => {
+        $log.textContent += args.join(" ") + "\n";
+    };
+
+    const formatPrice = (price) => {
+        return price.toLocaleString('ko-KR') + '원';
+    };
+
+    const updateStatus = (status, message) => {
+        $statusBadge.className = `status-badge ${status}`;
+        if (status === 'processing') {
+            $statusBadge.innerHTML = `${message}<span class="spinner"></span>`;
+        } else {
+            $statusBadge.textContent = message;
+        }
+    };
 
     (async () => {
         const params = new URLSearchParams(location.search);
@@ -19,37 +310,61 @@
         const orderId = params.get("orderId");
         const amount = params.get("amount");
 
+        log("📋 결제 인증 정보 확인");
         log("query:", location.search);
         log("paymentKey:", paymentKey);
         log("orderId:", orderId);
         log("amount:", amount);
 
+        // UI 업데이트
+        if (orderId) $orderIdDisplay.textContent = orderId;
+        if (amount) $amountDisplay.textContent = formatPrice(Number(amount));
+        if (paymentKey) $paymentKeyDisplay.textContent = paymentKey;
+
         if (!paymentKey || !orderId || !amount) {
-            log("필수 파라미터 누락. (paymentKey/orderId/amount)");
+            log("\n❌ 필수 파라미터 누락 (paymentKey/orderId/amount)");
+            updateStatus('error', '결제 실패');
+            $successTitle.textContent = '결제 정보 오류';
+            $successMessage.textContent = '필수 정보가 누락되었습니다.';
             return;
         }
 
-        log("\n[1] /api/v1/payments/confirm 자동 호출 중...");
-        const confirmRes = await fetch("/api/v1/payments/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                paymentKey,
-                orderId,
-                amount: Number(amount)
-            })
-        });
+        log("\n⏳ [1] /api/v1/payments/confirm 호출 중...");
 
-        const bodyText = await confirmRes.text();
+        try {
+            const confirmRes = await fetch("/api/v1/payments/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    paymentKey,
+                    orderId,
+                    amount: Number(amount)
+                })
+            });
 
-        if (!confirmRes.ok) {
-            log("CONFIRM 실패:", confirmRes.status);
+            const bodyText = await confirmRes.text();
+
+            if (!confirmRes.ok) {
+                log("\n❌ [2] CONFIRM 실패:", confirmRes.status);
+                log(bodyText);
+                updateStatus('error', '승인 실패');
+                $successTitle.textContent = '결제 승인 실패';
+                $successMessage.textContent = '결제 승인 처리 중 문제가 발생했습니다.';
+                return;
+            }
+
+            log("\n✅ [2] CONFIRM 성공!");
             log(bodyText);
-            return;
-        }
+            updateStatus('', '승인 완료');
+            $successTitle.textContent = '결제가 완료되었습니다';
+            $successMessage.textContent = '정상적으로 결제가 처리되었습니다.';
 
-        log("[2] CONFIRM 성공!");
-        log(bodyText);
+        } catch (error) {
+            log("\n❌ 네트워크 오류:", error.message);
+            updateStatus('error', '네트워크 오류');
+            $successTitle.textContent = '결제 처리 오류';
+            $successMessage.textContent = '서버와의 연결에 문제가 발생했습니다.';
+        }
     })();
 </script>
 </body>
