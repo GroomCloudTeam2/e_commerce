@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReqUpdateUserDtoV1 {
 
-    private String nickname;
-    private String phoneNumber;
-    private String password;
-    private String address;
+	private String nickname;
+	private String phoneNumber;
+	private String password;
+	private String address;
 }

@@ -1,3 +1,5 @@
+
+
 {
   "openapi": "3.0.3",
   "info": {
@@ -1902,6 +1904,7 @@
           "PAID",
           "SHIPPED",
           "DELIVERED",
+          "CONFIRMED",
           "CANCELED"
         ]
       },
