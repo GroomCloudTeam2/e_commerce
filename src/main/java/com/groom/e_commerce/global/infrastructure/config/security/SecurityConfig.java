@@ -1,5 +1,6 @@
 package com.groom.e_commerce.global.infrastructure.config.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,8 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -28,11 +27,18 @@ public class SecurityConfig {
 			.csrf(AbstractHttpConfigurer::disable)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
+				// ✅ 인증/회원가입
 				.requestMatchers("/auth/signup", "/auth/login").permitAll()
+
+				// ✅ 결제(너 레거시에서 permitAll 해둔거 합침)
+				.requestMatchers("/api/v1/payments/confirm").permitAll()
+				.requestMatchers("/api/v1/payments/**").permitAll() // 필요 없으면 삭제
+
+				// ✅ Swagger
 				.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
 				.anyRequest().authenticated()
 			)
-			// 사용자 요청 Role 필터 검사
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
