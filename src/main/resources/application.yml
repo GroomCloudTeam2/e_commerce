@@ -19,6 +19,12 @@ spring:
         # 👇 (선택) PostgreSQL 전용 방언 설정 (없어도 되지만 넣으면 더 안정적)
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  security:
+    user:
+      name: user
+      password: 1234
+
+
 jwt:
   secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
   access-token-validity: 3600000
@@ -36,3 +42,14 @@ logging:
   level:
     com.groom.ecommerce: DEBUG
     org.hibernate.SQL: DEBUG
+
+toss:
+  payments:
+    base-url: https://api.tosspayments.com
+    secret-key: ${TOSS_PAYMENTS_SECRET_KEY:}
+    client-key: test_ck_AQ92ymxN349xlKM196KKVajRKXvd
+    success-url: http://localhost:8080/pay-success.html
+    fail-url: http://localhost:8080/pay-fail.html
+    connect-timeout-ms: 3000
+    read-timeout-ms: 5000
+
