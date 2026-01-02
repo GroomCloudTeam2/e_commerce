@@ -49,8 +49,8 @@ public class TossPaymentsClient {
 					.flatMap(err -> Mono.error(new TossApiException(
 						clientResponse.statusCode(),
 						"TOSS_CONFIRM_FAILED",
-						err.code(),
-						err.message()
+						err.message(), // ✅ message
+						err.code()     // ✅ tossErrorCode
 					)))
 			)
 			.bodyToMono(TossPaymentResponse.class)
@@ -73,8 +73,8 @@ public class TossPaymentsClient {
 					.flatMap(err -> Mono.error(new TossApiException(
 						clientResponse.statusCode(),
 						"TOSS_GET_FAILED",
-						err.code(),
-						err.message()
+						err.message(), // ✅ message
+						err.code()     // ✅ tossErrorCode
 					)))
 			)
 			.bodyToMono(TossPaymentResponse.class)
@@ -85,6 +85,7 @@ public class TossPaymentsClient {
 		return tossWebClient.post()
 			.uri("/v1/payments/{paymentKey}/cancel", paymentKey)
 			.header(HttpHeaders.AUTHORIZATION, basicAuth(secretKey))
+			.header("Idempotency-Key", UUID.randomUUID().toString()) // ✅ 멱등키
 			.contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON)
 			.bodyValue(request)
@@ -95,8 +96,8 @@ public class TossPaymentsClient {
 					.flatMap(err -> Mono.error(new TossApiException(
 						clientResponse.statusCode(),
 						"TOSS_CANCEL_FAILED",
-						err.code(),
-						err.message()
+						err.message(), // ✅ message
+						err.code()     // ✅ tossErrorCode
 					)))
 			)
 			.bodyToMono(TossCancelResponse.class)
@@ -104,7 +105,6 @@ public class TossPaymentsClient {
 	}
 
 	private String basicAuth(String secretKey) {
-		// Toss: Basic base64(secretKey + ":")
 		String raw = secretKey + ":";
 		String encoded = Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
 		return "Basic " + encoded;

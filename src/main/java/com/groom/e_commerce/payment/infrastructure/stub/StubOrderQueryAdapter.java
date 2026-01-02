@@ -15,7 +15,7 @@ public class StubOrderQueryAdapter implements OrderQueryPort {
 		// TODO: order 도메인 붙으면 진짜 조회로 교체
 		return new OrderSummary(
 			orderId,
-			15000L,              // 임시 금액
+			45000L,              // 임시 금액
 			"TEST-ORDER-001",    // 임시 주문번호
 			"TEST_CUSTOMER"      // 임시 고객명
 		);

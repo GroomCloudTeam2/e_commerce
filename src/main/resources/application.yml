@@ -41,7 +41,7 @@ toss:
   payments:
     base-url: https://api.tosspayments.com
     secret-key: ${TOSS_PAYMENTS_SECRET_KEY:}
-    client-key: ${TOSS_CLIENT_KEY:}   # 프론트(결제창 호출)에서 쓰는 키
+    client-key: test_ck_AQ92ymxN349xlKM196KKVajRKXvd
     success-url: http://localhost:8080/pay-success.html
     fail-url: http://localhost:8080/pay-fail.html
     connect-timeout-ms: 3000
