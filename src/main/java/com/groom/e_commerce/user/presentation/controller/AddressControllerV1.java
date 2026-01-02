@@ -35,7 +35,7 @@ public class AddressControllerV1 {
 	@Operation(summary = "배송지 목록 조회")
 	@GetMapping
 	public ResponseEntity<List<ResAddressDtoV1>> getAddresses(@AuthenticationPrincipal CustomUserDetails user) {
-		return ResponseEntity.ok(addressService.getAddresses(user.getUserId()));
+        return ResponseEntity.ok(addressService.getAddresses(user.getUserId()));
 	}
 
 	@Operation(summary = "배송지 등록")
