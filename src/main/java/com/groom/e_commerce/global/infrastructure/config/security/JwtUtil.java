@@ -50,6 +50,7 @@ public class JwtUtil {
 		return generateToken(userId, email, role, refreshTokenExpiration);
 	}
 
+    // JWT 발급
 	private String generateToken(UUID userId, String email, String role, long expiration) {
 		Date now = new Date();
 		return Jwts.builder()

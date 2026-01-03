@@ -16,6 +16,7 @@ import java.util.UUID;
 @Builder
 public class AddressEntity {
 
+<<<<<<< Updated upstream
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "address_id", columnDefinition = "uuid")
@@ -65,3 +66,73 @@ public class AddressEntity {
         this.isDefault = isDefault;
     }
 }
+=======
+    /* ==================== PK ==================== */
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "address_id", columnDefinition = "uuid")
+    private UUID addressId;
+
+    /* ==================== 연관관계 ==================== */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
+
+    /* ==================== 수령인 정보 ==================== */
+
+    @Column(name = "recipient", length = 50)
+    private String recipient;
+
+    @Column(name = "recipient_phone", length = 20)
+    private String recipientPhone;
+
+    /* ==================== 주소 정보 ==================== */
+
+    @Column(name = "zip_code", length = 10, nullable = false)
+    private String zipCode;
+
+    @Column(name = "address", length = 200, nullable = false)
+    private String address;
+
+    @Column(name = "detail_address", length = 200, nullable = false)
+    private String detailAddress;
+
+    /* ==================== 기본 배송지 여부 ==================== */
+
+    @Column(name = "is_default", nullable = false)
+    @Builder.Default
+    private Boolean isDefault = false;
+
+    /* ==================== Audit 필드 ==================== */
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    /* ==================== 정보 수정 메서드 ==================== */
+
+    public void update(String zipCode, String address, String detailAddress,
+                       String recipient, String recipientPhone, Boolean isDefault) {
+        this.zipCode = zipCode;
+        this.address = address;
+        this.detailAddress = detailAddress;
+        this.recipient = recipient;
+        this.recipientPhone = recipientPhone;
+        if (isDefault != null) {
+            this.isDefault = isDefault;
+        }
+    }
+
+    /* ==================== 기본 배송지 설정 ==================== */
+
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
+}
+>>>>>>> Stashed changes

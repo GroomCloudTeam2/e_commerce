@@ -24,11 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 
+    // API 요청 시 호출
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 		FilterChain filterChain) throws ServletException, IOException {
-		String token = resolveToken(request);
+		// Authorization Header -> Token 추출
+        String token = resolveToken(request);
 
+        // Token에서 사용자 정보 추출 -> CustomUserDetails 생성
 		if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
 			CustomUserDetails userDetails = new CustomUserDetails(
 				jwtUtil.getUserIdFromToken(token),
@@ -36,16 +39,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				jwtUtil.getRoleFromToken(token)
 			);
 
+            // Authentication 객체 생성 (권한 정보 포함)
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 				userDetails, null, List.of(new SimpleGrantedAuthority("ROLE_" + userDetails.getRole()))
 			);
 
+            // SecurityContext에 인증 정보 저장
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
+        // 다음 필터로 진행
 		filterChain.doFilter(request, response);
 	}
 
+    // Token 추출 로직
 	private String resolveToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader("Authorization");
 		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {

@@ -14,6 +14,7 @@ import com.groom.e_commerce.user.domain.entity.UserRole;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
+    // User, Manager 용 : 본인 회원 정보 조회
 	Optional<UserEntity> findByEmail(String email);
 
 	Optional<UserEntity> findByNickname(String nickname);

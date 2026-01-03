@@ -15,6 +15,7 @@ import java.util.UUID;
 @Builder
 public class SellerEntity {
 
+<<<<<<< Updated upstream
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "seller_id", columnDefinition = "uuid")
@@ -64,3 +65,82 @@ public class SellerEntity {
         if (account != null) this.account = account;
     }
 }
+=======
+    /* ==================== PK ==================== */
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "seller_id", columnDefinition = "uuid")
+    private UUID sellerId;
+
+    /* ==================== 연관관계 ==================== */
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private UserEntity user;
+
+    /* ==================== 상점 정보 ==================== */
+
+    @Column(name = "store_name", length = 200, nullable = false)
+    private String storeName;
+
+    @Column(name = "business_no", length = 50)
+    private String businessNo;
+
+    /* ==================== 상점 주소 ==================== */
+
+    @Column(name = "zip_code", length = 20)
+    private String zipCode;
+
+    @Column(name = "address", length = 200)
+    private String address;
+
+    @Column(name = "detail_address", length = 200)
+    private String detailAddress;
+
+    /* ==================== 정산 정보 ==================== */
+
+    @Column(name = "bank", length = 50)
+    private String bank;
+
+    @Column(name = "account", length = 100)
+    private String account;
+
+    /* ==================== 상태 & Audit ==================== */
+
+    @Column(name = "status", length = 20)
+    @Builder.Default
+    private String status = "ACTIVE";
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    /* ==================== 정보 수정 메서드 ==================== */
+
+    public void updateInfo(String storeName, String businessNo, String zipCode,
+                           String address, String detailAddress, String bank, String account) {
+        if (storeName != null) {
+            this.storeName = storeName;
+        }
+        if (businessNo != null) {
+            this.businessNo = businessNo;
+        }
+        if (zipCode != null) {
+            this.zipCode = zipCode;
+        }
+        if (address != null) {
+            this.address = address;
+        }
+        if (detailAddress != null) {
+            this.detailAddress = detailAddress;
+        }
+        if (bank != null) {
+            this.bank = bank;
+        }
+        if (account != null) {
+            this.account = account;
+        }
+    }
+}
+>>>>>>> Stashed changes

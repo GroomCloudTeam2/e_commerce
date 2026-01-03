@@ -32,85 +32,101 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(name = "user_id", columnDefinition = "uuid")
-	private UUID userId;
+    /* ==================== PK ==================== */
 
-	@Column(name = "email", length = 100, nullable = false, unique = true)
-	private String email;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id", columnDefinition = "uuid")
+    private UUID userId;
 
-	@Column(name = "password", length = 255, nullable = false)
-	private String password;
+    /* ==================== 기본 정보 ==================== */
 
-	@Column(name = "nickname", length = 200, nullable = false, unique = true)
-	private String nickname;
+    @Column(name = "email", length = 100, nullable = false, unique = true)
+    private String email;
 
-	@Column(name = "phone_number", length = 200, nullable = false)
-	private String phoneNumber;
+    @Column(name = "password", length = 255, nullable = false)
+    private String password;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "role", length = 20, nullable = false)
-	private UserRole role;
+    @Column(name = "nickname", length = 200, nullable = false, unique = true)
+    private String nickname;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "status", length = 20, nullable = false)
-	@Builder.Default
-	private UserStatus status = UserStatus.ACTIVE;
+    @Column(name = "phone_number", length = 200, nullable = false)
+    private String phoneNumber;
 
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
+    /* ==================== 역할 & 상태 ==================== */
 
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 20, nullable = false)
+    private UserRole role;
 
-	@Column(name = "deleted_at")
-	private LocalDateTime deletedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
 
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	@Builder.Default
-	private List<AddressEntity> addresses = new ArrayList<>();
+    /* ==================== Audit 필드 ==================== */
 
-	public void updateNickname(String nickname) {
-		this.nickname = nickname;
-	}
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-	public void updatePhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-	public void updatePassword(String encodedPassword) {
-		this.password = encodedPassword;
-	}
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
-	public void withdraw() {
-		this.status = UserStatus.WITHDRAWN;
-		this.deletedAt = LocalDateTime.now();
-	}
+    /* ==================== 연관관계 ==================== */
 
-	public void ban() {
-		this.status = UserStatus.BANNED;
-	}
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AddressEntity> addresses = new ArrayList<>();
 
-	public void activate() {
-		this.status = UserStatus.ACTIVE;
-	}
+    /* ==================== 정보 수정 메서드 ==================== */
 
-	public boolean isWithdrawn() {
-		return this.status == UserStatus.WITHDRAWN;
-	}
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 
-	public boolean isBanned() {
-		return this.status == UserStatus.BANNED;
-	}
+    public void updatePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
-	public void reactivate(String encodedPassword, String nickname, String phoneNumber) {
-		this.password = encodedPassword;
-		this.nickname = nickname;
-		this.phoneNumber = phoneNumber;
-		this.status = UserStatus.ACTIVE;
-		this.deletedAt = null;
-	}
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    /* ==================== 상태 변경 메서드 ==================== */
+
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void ban() {
+        this.status = UserStatus.BANNED;
+    }
+
+    public void activate() {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    public void reactivate(String encodedPassword, String nickname, String phoneNumber) {
+        this.password = encodedPassword;
+        this.nickname = nickname;
+        this.phoneNumber = phoneNumber;
+        this.status = UserStatus.ACTIVE;
+        this.deletedAt = null;
+    }
+
+    /* ==================== 상태 확인 메서드 ==================== */
+
+    public boolean isWithdrawn() {
+        return this.status == UserStatus.WITHDRAWN;
+    }
+
+    public boolean isBanned() {
+        return this.status == UserStatus.BANNED;
+    }
 }
