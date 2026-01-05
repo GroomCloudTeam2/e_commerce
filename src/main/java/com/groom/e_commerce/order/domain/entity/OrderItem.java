@@ -89,6 +89,22 @@ public class OrderItem extends BaseEntity {
 		this.itemStatus = OrderStatus.CANCELLED;
 	}
 
+	// 배송 시작 처리
+	public void startShipping() {
+		if (this.itemStatus != OrderStatus.PAID) {
+			throw new IllegalStateException("배송 시작은 '결제 완료' 또는 '상품 준비 중' 상태에서만 가능합니다. 현재 상태: " + this.itemStatus);
+		}
+		this.itemStatus = OrderStatus.SHIPPING;
+	}
+
+	// 배송 완료 처리
+	public void completeDelivery() {
+		if (this.itemStatus != OrderStatus.SHIPPING) {
+			throw new IllegalStateException("배송 완료는 '배송 중' 상태에서만 가능합니다. 현재 상태: " + this.itemStatus);
+		}
+		this.itemStatus = OrderStatus.DELIVERED;
+	}
+
 	// 1. 취소 가능 검증
 	public void validateCancelable() {
 		// 배송 중, 배송 완료, 구매 확정 상태면 에러

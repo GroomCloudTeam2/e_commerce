@@ -11,8 +11,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
+import lombok.AccessLevel;
 import lombok.Getter;
-
+import lombok.NoArgsConstructor;
+@lombok.experimental.SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
