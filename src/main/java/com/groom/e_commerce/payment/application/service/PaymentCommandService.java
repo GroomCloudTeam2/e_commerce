@@ -1,7 +1,9 @@
 package com.groom.e_commerce.payment.application.service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,8 +17,10 @@ import com.groom.e_commerce.payment.application.port.out.OrderStatePort;
 import com.groom.e_commerce.payment.application.port.out.TossPaymentPort;
 import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.entity.PaymentCancel;
+import com.groom.e_commerce.payment.domain.entity.PaymentSplit;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
+import com.groom.e_commerce.payment.domain.repository.PaymentSplitRepository;
 import com.groom.e_commerce.payment.infrastructure.api.toss.config.TossPaymentsProperties;
 import com.groom.e_commerce.payment.infrastructure.api.toss.dto.request.TossCancelRequest;
 import com.groom.e_commerce.payment.infrastructure.api.toss.dto.request.TossConfirmRequest;
@@ -38,19 +42,24 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 	private static final String PG_PROVIDER_TOSS = "toss";
 
 	private final PaymentRepository paymentRepository;
+	private final PaymentSplitRepository paymentSplitRepository;
+
 	private final TossPaymentPort tossPaymentPort;
 	private final TossPaymentsProperties tossPaymentsProperties;
+
 	private final OrderQueryPort orderQueryPort;
 	private final OrderStatePort orderStatePort;
 
 	public PaymentCommandService(
 		PaymentRepository paymentRepository,
+		PaymentSplitRepository paymentSplitRepository,
 		TossPaymentPort tossPaymentPort,
 		TossPaymentsProperties tossPaymentsProperties,
 		OrderQueryPort orderQueryPort,
 		OrderStatePort orderStatePort
 	) {
 		this.paymentRepository = paymentRepository;
+		this.paymentSplitRepository = paymentSplitRepository;
 		this.tossPaymentPort = tossPaymentPort;
 		this.tossPaymentsProperties = tossPaymentsProperties;
 		this.orderQueryPort = orderQueryPort;
@@ -59,11 +68,6 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 
 	/**
 	 * ✅ 결제 준비(READY)
-	 * - 주문 존재 확인 (Port)
-	 * - 금액 위변조 검증 (Order.totalPaymentAmt vs 요청 amount)
-	 * - 결제 레코드 존재 확인 (주문 1 : 결제 1)
-	 * - 결제 상태 READY 확인
-	 * - 토스 결제창 호출에 필요한 값 반환
 	 */
 	@Override
 	@Transactional(readOnly = true)
@@ -71,7 +75,6 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 		UUID orderId = request.orderId();
 		Long requestAmount = request.amount();
 
-		// ✅ null 방어
 		if (requestAmount == null) {
 			throw new PaymentException(
 				HttpStatus.BAD_REQUEST,
@@ -94,9 +97,8 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			);
 		}
 
-		// 2) 금액 검증 (언박싱/타입 문제 방지)
+		// 2) 금액 검증
 		long orderTotal = order.totalPaymentAmt();
-
 		if (orderTotal != requestAmount.longValue()) {
 			throw new PaymentException(
 				HttpStatus.BAD_REQUEST,
@@ -147,6 +149,9 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 
 	/**
 	 * ✅ 결제 승인(confirm)
+	 * - 토스 승인 성공 후 Payment 상태 변경
+	 * - ✅ 주문상품 목록 조회 후 PaymentSplit 생성/저장
+	 * - 주문 상태 변경 (PENDING -> PAID)
 	 */
 	@Override
 	public ResPaymentV1 confirm(ReqConfirmPaymentV1 request) {
@@ -203,11 +208,15 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			);
 		}
 
+		// ✅ 결제 상태 반영
 		payment.markPaid(toss.paymentKey(), toss.approvedAt());
+
+		// ✅ PaymentSplit 생성/저장 (주문상품 기준)
+		createPaymentSplitsIfNeeded(payment, orderId);
 
 		Payment saved = paymentRepository.save(payment);
 
-		//Order 상태 변경 (PENDING -> PAID)
+		// ✅ Order 상태 변경 (PENDING -> PAID)
 		orderStatePort.payOrder(orderId);
 
 		return ResPaymentV1.from(saved);
@@ -215,8 +224,6 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 
 	/**
 	 * ✅ 결제 취소(cancel)
-	 * - canceledAt: OffsetDateTime 고정
-	 * - 토스가 이미 취소된 결제라고 응답하면 성공처럼 처리 + DB 보정
 	 */
 	@Override
 	public ResCancelResultV1 cancel(String paymentKey, ReqCancelPaymentV1 request) {
@@ -282,7 +289,6 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			throw e;
 		}
 
-		// ✅ canceledAt null 방지 + 타입 일치(OffsetDateTime)
 		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null)
 			? tossCancel.canceledAt()
 			: OffsetDateTime.now();
@@ -303,5 +309,47 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 			saved.getStatus().name(),
 			saved.getCanceledAmount()
 		);
+	}
+
+	/**
+	 * 결제 승인 성공 후 주문상품 목록을 조회하여 PaymentSplit을 생성한다.
+	 * - UNIQUE(order_item_id) 제약이 있는 경우, 이미 존재하면 생성 스킵(멱등)
+	 */
+	private void createPaymentSplitsIfNeeded(Payment payment, UUID orderId) {
+		List<OrderQueryPort.OrderItemSnapshot> items = orderQueryPort.getOrderItems(orderId);
+		if (items == null || items.isEmpty()) {
+			throw new PaymentException(
+				HttpStatus.BAD_GATEWAY,
+				"ORDER_ITEMS_EMPTY",
+				"주문상품 정보를 조회할 수 없습니다."
+			);
+		}
+
+		List<PaymentSplit> splits = items.stream()
+			.filter(i -> !paymentSplitRepository.existsByOrderItemId(i.orderItemId()))
+			.map(i -> {
+				// ✅ PaymentSplit이 UUID를 받는 형태라면 이대로
+				return PaymentSplit.of(
+					payment,
+					orderId,
+					i.orderItemId(),
+					i.ownerId(),
+					i.subtotal()
+				);
+
+				// ❗만약 PaymentSplit이 String 컬럼/생성자라면 아래처럼 변환
+				// return PaymentSplit.of(
+				//     payment,
+				//     orderId.toString(),
+				//     i.orderItemId().toString(),
+				//     i.ownerId().toString(),
+				//     i.subtotal()
+				// );
+			})
+			.collect(Collectors.toList());
+
+		if (!splits.isEmpty()) {
+			paymentSplitRepository.saveAll(splits);
+		}
 	}
 }
