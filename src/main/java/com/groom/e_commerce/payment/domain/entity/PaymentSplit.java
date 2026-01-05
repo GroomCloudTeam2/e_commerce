@@ -1,8 +1,8 @@
 // src/main/java/com/groom/e_commerce/payment/domain/entity/PaymentSplit.java
 package com.groom.e_commerce.payment.domain.entity;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
+
 import com.groom.e_commerce.payment.domain.model.PaymentSplitStatus;
 
 import jakarta.persistence.*;
@@ -23,20 +23,20 @@ public class PaymentSplit {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(name = "split_id", columnDefinition = "uuid")
+	@Column(name = "split_id", nullable = false)
 	private UUID splitId;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "payment_id", nullable = false)
 	private Payment payment;
 
-	@Column(name = "order_id", nullable = false, columnDefinition = "uuid")
+	@Column(name = "order_id", nullable = false)
 	private UUID orderId;
 
-	@Column(name = "order_item_id", nullable = false, columnDefinition = "uuid")
+	@Column(name = "order_item_id", nullable = false)
 	private UUID orderItemId;
 
-	@Column(name = "owner_id", nullable = false, columnDefinition = "uuid")
+	@Column(name = "owner_id", nullable = false)
 	private UUID ownerId;
 
 	@Column(name = "item_amount", nullable = false)
@@ -49,11 +49,7 @@ public class PaymentSplit {
 	@Column(name = "status", nullable = false, length = 20)
 	private PaymentSplitStatus status;
 
-	@Column(name = "created_at")
-	private OffsetDateTime createdAt;
-
-	protected PaymentSplit() {
-	}
+	protected PaymentSplit() {}
 
 	private PaymentSplit(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, Long itemAmount) {
 		this.payment = payment;
@@ -63,7 +59,6 @@ public class PaymentSplit {
 		this.itemAmount = itemAmount;
 		this.canceledAmount = 0L;
 		this.status = PaymentSplitStatus.PAID;
-		this.createdAt = OffsetDateTime.now();
 	}
 
 	public static PaymentSplit of(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, Long itemAmount) {
@@ -72,44 +67,33 @@ public class PaymentSplit {
 		if (orderItemId == null) throw new IllegalArgumentException("orderItemId must not be null");
 		if (ownerId == null) throw new IllegalArgumentException("ownerId must not be null");
 		if (itemAmount == null || itemAmount <= 0) throw new IllegalArgumentException("itemAmount must be > 0");
-
 		return new PaymentSplit(payment, orderId, orderItemId, ownerId, itemAmount);
 	}
 
+	public long cancelableAmount() {
+		return this.itemAmount - this.canceledAmount;
+	}
+
+	public void addCancel(long cancelAmount) {
+		if (cancelAmount <= 0) throw new IllegalArgumentException("cancelAmount must be > 0");
+		long remaining = cancelableAmount();
+		if (cancelAmount > remaining) throw new IllegalArgumentException("cancelAmount exceeds remaining");
+		this.canceledAmount += cancelAmount;
+
+		if (this.canceledAmount >= this.itemAmount) {
+			this.status = PaymentSplitStatus.CANCELLED;
+		} else {
+			this.status = PaymentSplitStatus.PARTIAL_CANCELLED;
+		}
+	}
+
 	// getters
-	public UUID getSplitId() {
-		return splitId;
-	}
-
-	public Payment getPayment() {
-		return payment;
-	}
-
-	public UUID getOrderId() {
-		return orderId;
-	}
-
-	public UUID getOrderItemId() {
-		return orderItemId;
-	}
-
-	public UUID getOwnerId() {
-		return ownerId;
-	}
-
-	public Long getItemAmount() {
-		return itemAmount;
-	}
-
-	public Long getCanceledAmount() {
-		return canceledAmount;
-	}
-
-	public PaymentSplitStatus getStatus() {
-		return status;
-	}
-
-	public OffsetDateTime getCreatedAt() {
-		return createdAt;
-	}
+	public UUID getSplitId() { return splitId; }
+	public Payment getPayment() { return payment; }
+	public UUID getOrderId() { return orderId; }
+	public UUID getOrderItemId() { return orderItemId; }
+	public UUID getOwnerId() { return ownerId; }
+	public Long getItemAmount() { return itemAmount; }
+	public Long getCanceledAmount() { return canceledAmount; }
+	public PaymentSplitStatus getStatus() { return status; }
 }
