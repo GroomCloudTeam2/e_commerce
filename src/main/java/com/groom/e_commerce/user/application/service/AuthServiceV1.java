@@ -42,11 +42,10 @@ public class AuthServiceV1 {
 			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 OWNER만 회원가입할 수 있습니다.");
 		}
 
+		// 탈퇴 유저 복구 처리
 		Optional<UserEntity> existingUser = userRepository.findByEmail(request.getEmail());
-
 		if (existingUser.isPresent()) {
 			UserEntity user = existingUser.get();
-
 			if (user.isWithdrawn()) {
 				user.reactivate(
 					passwordEncoder.encode(request.getPassword()),
@@ -55,19 +54,27 @@ public class AuthServiceV1 {
 				);
 				log.info("User reactivated: {}", request.getEmail());
 				return;
-			} else {
-				throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
 			}
+			throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
 		}
 
 		if (userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())) {
 			throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
 		}
 
+		// SELLER인 경우 검증 + 저장을 한 블록에서 처리
 		if (request.isOwner()) {
 			validateOwnerFields(request);
+			UserEntity user = createAndSaveUser(request);
+			createAndSaveSeller(user, request);
+			log.info("Owner signed up with store: {}", request.getStore());
+		} else {
+			createAndSaveUser(request);
+			log.info("User signed up: {}", request.getEmail());
 		}
+	}
 
+	private UserEntity createAndSaveUser(ReqSignupDtoV1 request) {
 		UserEntity user = UserEntity.builder()
 			.email(request.getEmail())
 			.password(passwordEncoder.encode(request.getPassword()))
@@ -76,27 +83,22 @@ public class AuthServiceV1 {
 			.role(request.getRole())
 			.status(UserStatus.ACTIVE)
 			.build();
+		return userRepository.save(user);
+	}
 
-		userRepository.save(user);
-
-		if (request.isOwner()) {
-			SellerEntity seller = SellerEntity.builder()
-				.user(user)
-				.storeName(request.getStore())
-				.zipCode(request.getZipCode())
-				.address(request.getAddress())
-				.detailAddress(request.getDetailAddress())
-				.bank(request.getBank())
-				.account(request.getAccount())
-				.approvalRequest((request.getApprovalRequest()))
-				.sellerStatus(SellerStatus.PENDING)
-				.build();
-
-			sellerRepository.save(seller);
-			log.info("Owner signed up with store: {}", request.getStore());
-		} else {
-			log.info("User signed up: {}", request.getEmail());
-		}
+	private void createAndSaveSeller(UserEntity user, ReqSignupDtoV1 request) {
+		SellerEntity seller = SellerEntity.builder()
+			.user(user)
+			.storeName(request.getStore())
+			.zipCode(request.getZipCode())
+			.address(request.getAddress())
+			.detailAddress(request.getDetailAddress())
+			.bank(request.getBank())
+			.account(request.getAccount())
+			.approvalRequest(request.getApprovalRequest())
+			.sellerStatus(SellerStatus.PENDING)
+			.build();
+		sellerRepository.save(seller);
 	}
 
 	public ResTokenDtoV1 login(ReqLoginDtoV1 request) {
