@@ -10,15 +10,16 @@ import org.springframework.util.StringUtils;
 import com.groom.e_commerce.global.infrastructure.config.security.JwtUtil;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.SellerEntity;
-import com.groom.e_commerce.user.domain.entity.UserEntity;
-import com.groom.e_commerce.user.domain.entity.UserRole;
-import com.groom.e_commerce.user.domain.entity.UserStatus;
+import com.groom.e_commerce.user.domain.entity.seller.SellerEntity;
+import com.groom.e_commerce.user.domain.entity.seller.SellerStatus;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
+import com.groom.e_commerce.user.domain.entity.user.UserStatus;
 import com.groom.e_commerce.user.domain.repository.SellerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
-import com.groom.e_commerce.user.presentation.dto.request.ReqLoginDtoV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqSignupDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResTokenDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqLoginDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqSignupDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResTokenDtoV1;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class AuthServiceV1 {
 	@Transactional
 	public void signup(ReqSignupDtoV1 request) {
 		// USER, OWNER만 회원가입 가능 (MANAGER는 MASTER가 생성)
-		if (request.getRole() != UserRole.USER && request.getRole() != UserRole.OWNER) {
+		if (request.getRole() != UserRole.USER && request.getRole() != UserRole.SELLER) {
 			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 OWNER만 회원가입할 수 있습니다.");
 		}
 
@@ -87,6 +88,8 @@ public class AuthServiceV1 {
 				.detailAddress(request.getDetailAddress())
 				.bank(request.getBank())
 				.account(request.getAccount())
+				.approvalRequest((request.getApprovalRequest()))
+				.sellerStatus(SellerStatus.PENDING)
 				.build();
 
 			sellerRepository.save(seller);

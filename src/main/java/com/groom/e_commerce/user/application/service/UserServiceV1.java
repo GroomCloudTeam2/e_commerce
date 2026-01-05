@@ -12,13 +12,16 @@ import org.springframework.util.StringUtils;
 
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.PeriodType;
-import com.groom.e_commerce.user.domain.entity.UserEntity;
-import com.groom.e_commerce.user.domain.entity.UserRole;
+import com.groom.e_commerce.global.util.SecurityUtil;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
+import com.groom.e_commerce.user.domain.entity.user.PeriodType;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
+import com.groom.e_commerce.user.domain.repository.AddressRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
-import com.groom.e_commerce.user.presentation.dto.request.ReqUpdateUserDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResSalesStatDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResUserDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqUpdateUserDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.seller.ResSalesStatDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +33,25 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceV1 {
 
 	private final UserRepository userRepository;
+	private final AddressRepository addressRepository;
 	private final PasswordEncoder passwordEncoder;
 
-	public ResUserDtoV1 getMe(UUID userId) {
-		return ResUserDtoV1.from(findUserById(userId));
+	public ResUserDtoV1 getMe() {
+		UUID userId = SecurityUtil.getCurrentUserId();
+
+		// -- 기본 배송지 조회 --
+		UserEntity user = findUserById(userId);
+
+		AddressEntity defaultAddress = addressRepository
+			.findByUserUserIdAndIsDefaultTrue(userId)
+			.orElse(null);
+
+		return ResUserDtoV1.from(user, defaultAddress);
 	}
 
 	@Transactional
-	public void updateMe(UUID userId, ReqUpdateUserDtoV1 request) {
+	public void updateMe(ReqUpdateUserDtoV1 request) {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
 		if (StringUtils.hasText(request.getNickname())) {
@@ -57,7 +71,8 @@ public class UserServiceV1 {
 	}
 
 	@Transactional
-	public void deleteMe(UUID userId) {
+	public void deleteMe() {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
 		if (user.isWithdrawn()) {
@@ -68,10 +83,11 @@ public class UserServiceV1 {
 		log.info("User withdrew: {}", userId);
 	}
 
-	public List<ResSalesStatDtoV1> getSalesStats(UUID userId, PeriodType periodType, LocalDate date) {
+	public List<ResSalesStatDtoV1> getSalesStats(PeriodType periodType, LocalDate date) {
+		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
-		if (user.getRole() != UserRole.OWNER) {
+		if (user.getRole() != UserRole.SELLER) {
 			throw new CustomException(ErrorCode.FORBIDDEN);
 		}
 

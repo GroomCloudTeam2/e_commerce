@@ -1,12 +1,11 @@
-package com.groom.e_commerce.user.domain.entity;
+package com.groom.e_commerce.user.domain.entity.user;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,20 +22,27 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "p_user")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
-public class UserEntity {
+@SuperBuilder
+public class UserEntity extends BaseEntity {
 
+	// =========================
+	// PK
+	// =========================
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	@Column(name = "user_id", columnDefinition = "uuid")
 	private UUID userId;
 
+	// =========================
+	// Basic Info
+	// =========================
 	@Column(name = "email", length = 100, nullable = false, unique = true)
 	private String email;
 
@@ -49,6 +55,9 @@ public class UserEntity {
 	@Column(name = "phone_number", length = 200, nullable = false)
 	private String phoneNumber;
 
+	// =========================
+	// Status / Role
+	// =========================
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", length = 20, nullable = false)
 	private UserRole role;
@@ -58,21 +67,16 @@ public class UserEntity {
 	@Builder.Default
 	private UserStatus status = UserStatus.ACTIVE;
 
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
-
-	@Column(name = "deleted_at")
-	private LocalDateTime deletedAt;
-
+	// =========================
+	// Relation
+	// =========================
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	private List<AddressEntity> addresses = new ArrayList<>();
 
+	// =========================
+	// Update Methods
+	// =========================
 	public void updateNickname(String nickname) {
 		this.nickname = nickname;
 	}
@@ -85,9 +89,18 @@ public class UserEntity {
 		this.password = encodedPassword;
 	}
 
-	public void withdraw() {
+	// =========================
+	// Status Change
+	// =========================
+	public void withdraw(String deletedBy) {
 		this.status = UserStatus.WITHDRAWN;
-		this.deletedAt = LocalDateTime.now();
+		// BaseEntity의 soft delete 사용
+		super.softDelete(deletedBy);
+	}
+
+	// 기존 시그니처 유지용 (원하면 삭제 가능)
+	public void withdraw() {
+		withdraw(null);
 	}
 
 	public void ban() {
@@ -98,6 +111,9 @@ public class UserEntity {
 		this.status = UserStatus.ACTIVE;
 	}
 
+	// =========================
+	// Status Check
+	// =========================
 	public boolean isWithdrawn() {
 		return this.status == UserStatus.WITHDRAWN;
 	}
@@ -106,11 +122,16 @@ public class UserEntity {
 		return this.status == UserStatus.BANNED;
 	}
 
+	// =========================
+	// Reactivate
+	// =========================
 	public void reactivate(String encodedPassword, String nickname, String phoneNumber) {
 		this.password = encodedPassword;
 		this.nickname = nickname;
 		this.phoneNumber = phoneNumber;
 		this.status = UserStatus.ACTIVE;
-		this.deletedAt = null;
+
+		// BaseEntity의 deleted_at/deleted_by는 "복구" 처리 필요 시 여기서 null 처리하는 방식으로 확장 가능
+		// (BaseEntity에 restore 메서드가 없어서, 보통은 BaseEntity에 restore()를 추가해서 처리)
 	}
 }
