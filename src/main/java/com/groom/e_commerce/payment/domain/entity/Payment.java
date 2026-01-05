@@ -19,7 +19,11 @@ import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
+@AllArgsConstructor // ✅ Builder를 쓰려면 이게 필요합니다.
+@Builder
 @Entity
 @Table(
 	name = "p_payment",
@@ -77,6 +81,7 @@ public class Payment {
 	@Column(name = "approved_at", nullable = true)
 	private OffsetDateTime approvedAt;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<PaymentCancel> cancels = new ArrayList<>();
 
