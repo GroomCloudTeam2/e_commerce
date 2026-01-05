@@ -80,4 +80,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
 	Optional<String> findTitleById(UUID id);
 
+	boolean existsByCategoryIdAndDeletedAtIsNull(UUID categoryId);
+
 }
