@@ -3,6 +3,8 @@ package com.groom.e_commerce.claim.application.service;
 import com.groom.e_commerce.claim.domain.entity.Claim;
 import com.groom.e_commerce.claim.domain.repository.ClaimRepository;
 import com.groom.e_commerce.claim.presentation.dto.ClaimDto;
+import com.groom.e_commerce.order.domain.entity.OrderItem;
+import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,23 +17,24 @@ import java.util.UUID;
 public class ClaimService {
 
 	private final ClaimRepository claimRepository;
-
-	// TODO: Order 모듈과 통신하기 위한 Port(Interface) 혹은 FeignClient 필요
-	// private final OrderProvider orderProvider;
+	private final OrderItemRepository orderItemRepository;
 
 	/**
 	 * 사용자: 클레임 요청
 	 */
 	@Transactional
 	public UUID createClaim(UUID userId, ClaimDto.Request request) {
-		// 1. 주문 상품 검증 (실제로는 Order 서비스 조회 필요)
-		// OrderItemInfo orderItem = orderProvider.getOrderItem(request.getOrderItemId());
+		// 1. 주문 상품 조회 및 검증
+		OrderItem orderItem = orderItemRepository.findById(request.getOrderItemId())
+			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문 상품입니다."));
 
-		// 2. 본인 주문 확인 로직
-		// if (!orderItem.getUserId().equals(userId)) throw new CustomException(...);
+		// 2. 본인 주문 확인 로직 (주문의 구매자와 요청자 ID 비교)
+		if (!orderItem.getOrder().getBuyerId().equals(userId)) {
+			throw new IllegalArgumentException("본인의 주문 상품만 클레임을 요청할 수 있습니다.");
+		}
 
-		// 3. 임시 주문 상태 스냅샷 (예: 현재 배송완료 상태)
-		String currentOrderStatus = "DELIVERED"; // orderItem.getStatus();
+		// 3. 주문 상태 스냅샷
+		String currentStatus = orderItem.getItemStatus().name();
 
 		// 4. 클레임 생성
 		Claim claim = Claim.builder()
@@ -39,7 +42,7 @@ public class ClaimService {
 			.orderItemId(request.getOrderItemId())
 			.claimType(request.getClaimType())
 			.reason(request.getReason())
-			.prevStatus(currentOrderStatus)
+			.prevStatus(currentStatus)
 			.build();
 
 		return claimRepository.save(claim).getClaimId();
@@ -63,6 +66,7 @@ public class ClaimService {
 		claim.approve(managerId, nextStatus);
 
 		// TODO: Order 서비스에 상태 변경 이벤트 발행 (Kafka or 내부 호출)
+		// 예: if (claim.getClaimType() == ClaimType.CANCEL) orderItem.cancel();
 	}
 
 	/**
