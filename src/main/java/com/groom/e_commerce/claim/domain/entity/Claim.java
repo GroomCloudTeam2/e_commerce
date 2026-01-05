@@ -57,9 +57,13 @@ public class Claim extends BaseEntity {
 	@Column(name = "next_status", length = 20)
 	private String nextStatus;
 
+	//사용자 클레임 요청 이유
 	@Column(name = "reason", nullable = false, length = 200)
 	private String reason;
 
+	//관리자 거절 사유
+	@Column(name = "reject_reason", length = 200)
+	private String rejectReason;
 	/* ================= 생성 ================= */
 
 	@Builder
@@ -96,7 +100,7 @@ public class Claim extends BaseEntity {
 		}
 		this.managerId = managerId;
 		this.claimStatus = ClaimStatus.REJECTED;
-		this.reason = rejectReason;
+		this.rejectReason = rejectReason;
 	}
 
 	// 처리 완료 (환불/재고 복구 끝)
