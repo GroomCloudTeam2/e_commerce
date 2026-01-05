@@ -1,4 +1,3 @@
-// src/main/java/com/groom/e_commerce/payment/domain/entity/PaymentSplit.java
 package com.groom.e_commerce.payment.domain.entity;
 
 import java.util.UUID;
@@ -40,10 +39,10 @@ public class PaymentSplit {
 	private UUID ownerId;
 
 	@Column(name = "item_amount", nullable = false)
-	private Long itemAmount;
+	private long itemAmount;
 
 	@Column(name = "canceled_amount", nullable = false)
-	private Long canceledAmount;
+	private long canceledAmount;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)
@@ -51,7 +50,7 @@ public class PaymentSplit {
 
 	protected PaymentSplit() {}
 
-	private PaymentSplit(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, Long itemAmount) {
+	private PaymentSplit(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, long itemAmount) {
 		this.payment = payment;
 		this.orderId = orderId;
 		this.orderItemId = orderItemId;
@@ -61,12 +60,12 @@ public class PaymentSplit {
 		this.status = PaymentSplitStatus.PAID;
 	}
 
-	public static PaymentSplit of(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, Long itemAmount) {
+	public static PaymentSplit of(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, long itemAmount) {
 		if (payment == null) throw new IllegalArgumentException("payment must not be null");
 		if (orderId == null) throw new IllegalArgumentException("orderId must not be null");
 		if (orderItemId == null) throw new IllegalArgumentException("orderItemId must not be null");
 		if (ownerId == null) throw new IllegalArgumentException("ownerId must not be null");
-		if (itemAmount == null || itemAmount <= 0) throw new IllegalArgumentException("itemAmount must be > 0");
+		if (itemAmount <= 0) throw new IllegalArgumentException("itemAmount must be > 0");
 		return new PaymentSplit(payment, orderId, orderItemId, ownerId, itemAmount);
 	}
 
@@ -76,11 +75,15 @@ public class PaymentSplit {
 
 	public void addCancel(long cancelAmount) {
 		if (cancelAmount <= 0) throw new IllegalArgumentException("cancelAmount must be > 0");
+
 		long remaining = cancelableAmount();
-		if (cancelAmount > remaining) throw new IllegalArgumentException("cancelAmount exceeds remaining");
+		if (cancelAmount > remaining) {
+			throw new IllegalStateException("cancelAmount exceeds remaining");
+		}
+
 		this.canceledAmount += cancelAmount;
 
-		if (this.canceledAmount >= this.itemAmount) {
+		if (this.canceledAmount == this.itemAmount) {
 			this.status = PaymentSplitStatus.CANCELLED;
 		} else {
 			this.status = PaymentSplitStatus.PARTIAL_CANCELLED;
@@ -93,7 +96,7 @@ public class PaymentSplit {
 	public UUID getOrderId() { return orderId; }
 	public UUID getOrderItemId() { return orderItemId; }
 	public UUID getOwnerId() { return ownerId; }
-	public Long getItemAmount() { return itemAmount; }
-	public Long getCanceledAmount() { return canceledAmount; }
+	public long getItemAmount() { return itemAmount; }
+	public long getCanceledAmount() { return canceledAmount; }
 	public PaymentSplitStatus getStatus() { return status; }
 }
