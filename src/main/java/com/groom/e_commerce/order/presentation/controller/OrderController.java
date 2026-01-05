@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "주문 API", description = "주문 생성 및 조회 관련 API") // 1. API 그룹 이름
+@Tag(name = "Order", description = "주문 생성 및 조회 관련 API") // 1. API 그룹 이름
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/orders")

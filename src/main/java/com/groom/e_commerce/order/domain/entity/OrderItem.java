@@ -88,4 +88,23 @@ public class OrderItem extends BaseEntity {
 	public void cancel() {
 		this.itemStatus = OrderStatus.CANCELLED;
 	}
+
+	// 1. 취소 가능 검증
+	public void validateCancelable() {
+		// 배송 중, 배송 완료, 구매 확정 상태면 에러
+		if (this.itemStatus == OrderStatus.SHIPPING ||
+			this.itemStatus == OrderStatus.DELIVERED ||
+			this.itemStatus == OrderStatus.CONFIRMED) {
+			throw new IllegalStateException("이미 배송이 시작되었거나 완료된 상품은 취소할 수 없습니다.");
+		}
+		if (this.itemStatus == OrderStatus.CANCELLED) {
+			throw new IllegalStateException("이미 취소된 상품입니다.");
+		}
+	}
+
+	// 2. 환불 금액 반환
+	public Long getRefundAmount() {
+		return this.subtotal;
+	}
+
 }

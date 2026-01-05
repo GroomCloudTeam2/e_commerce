@@ -25,6 +25,7 @@ import com.groom.e_commerce.product.application.service.ProductServiceV1;
 import com.groom.e_commerce.product.domain.enums.ProductStatus;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductCreateDtoV1;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductUpdateDtoV1;
+import com.groom.e_commerce.product.presentation.dto.response.ResProductCreateDtoV1;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductDtoV1;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductListDtoV1;
 
@@ -44,10 +45,10 @@ public class ProductControllerV1 {
 
 	@Operation(summary = "상품 등록", description = "판매자가 새 상품을 등록합니다.")
 	@PostMapping
-	public ResponseEntity<ResProductDtoV1> createProduct(
+	public ResponseEntity<ResProductCreateDtoV1> createProduct(
 		@Valid @RequestBody ReqProductCreateDtoV1 request
 	) {
-		ResProductDtoV1 response = productService.createProduct(request);
+		ResProductCreateDtoV1 response = productService.createProduct(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
@@ -55,9 +56,10 @@ public class ProductControllerV1 {
 	@GetMapping("/owner")
 	public ResponseEntity<Page<ResProductListDtoV1>> getSellerProducts(
 		@RequestParam(required = false) ProductStatus status,
+		@RequestParam(required = false) String keyword,
 		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
 	) {
-		Page<ResProductListDtoV1> response = productService.getSellerProducts(status, pageable);
+		Page<ResProductListDtoV1> response = productService.getSellerProducts(status, keyword, pageable);
 		return ResponseEntity.ok(response);
 	}
 
