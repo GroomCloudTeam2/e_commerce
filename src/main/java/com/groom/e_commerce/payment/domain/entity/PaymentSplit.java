@@ -1,8 +1,11 @@
 // src/main/java/com/groom/e_commerce/payment/domain/entity/PaymentSplit.java
 package com.groom.e_commerce.payment.domain.entity;
 
-import jakarta.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.UUID;
+import com.groom.e_commerce.payment.domain.model.PaymentSplitStatus;
+
+import jakarta.persistence.*;
 
 @Entity
 @Table(
@@ -20,64 +23,61 @@ public class PaymentSplit {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(name = "split_id", length = 36)
-	private String splitId;
+	@Column(name = "split_id", columnDefinition = "uuid")
+	private UUID splitId;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "payment_id", nullable = false)
 	private Payment payment;
 
-	@Column(name = "order_id", nullable = false, length = 100)
-	private String orderId;
+	@Column(name = "order_id", nullable = false, columnDefinition = "uuid")
+	private UUID orderId;
 
-	@Column(name = "order_item_id", nullable = false, length = 100)
-	private String orderItemId;
+	@Column(name = "order_item_id", nullable = false, columnDefinition = "uuid")
+	private UUID orderItemId;
 
-	@Column(name = "owner_id", nullable = false, length = 100)
-	private String ownerId;
+	@Column(name = "owner_id", nullable = false, columnDefinition = "uuid")
+	private UUID ownerId;
 
 	@Column(name = "item_amount", nullable = false)
 	private Long itemAmount;
 
-	/**
-	 * 지금 단계(승인 시 split 생성)에서는 필요 없으면 지워도 됨.
-	 * 나중에 부분취소/환불을 split 기준으로 잡을 때 확장용.
-	 */
 	@Column(name = "canceled_amount", nullable = false)
 	private Long canceledAmount;
 
-	/**
-	 * created_at 성격의 스냅샷 타임스탬프(선택)
-	 * Audit BaseEntity가 있으면 그걸로 대체 가능.
-	 */
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false, length = 20)
+	private PaymentSplitStatus status;
+
 	@Column(name = "created_at")
 	private OffsetDateTime createdAt;
 
 	protected PaymentSplit() {
 	}
 
-	private PaymentSplit(Payment payment, String orderId, String orderItemId, String ownerId, Long itemAmount) {
+	private PaymentSplit(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, Long itemAmount) {
 		this.payment = payment;
 		this.orderId = orderId;
 		this.orderItemId = orderItemId;
 		this.ownerId = ownerId;
 		this.itemAmount = itemAmount;
 		this.canceledAmount = 0L;
+		this.status = PaymentSplitStatus.PAID;
 		this.createdAt = OffsetDateTime.now();
 	}
 
-	public static PaymentSplit of(Payment payment, String orderId, String orderItemId, String ownerId, Long itemAmount) {
+	public static PaymentSplit of(Payment payment, UUID orderId, UUID orderItemId, UUID ownerId, Long itemAmount) {
 		if (payment == null) throw new IllegalArgumentException("payment must not be null");
-		if (orderId == null || orderId.isBlank()) throw new IllegalArgumentException("orderId must not be blank");
-		if (orderItemId == null || orderItemId.isBlank()) throw new IllegalArgumentException("orderItemId must not be blank");
-		if (ownerId == null || ownerId.isBlank()) throw new IllegalArgumentException("ownerId must not be blank");
+		if (orderId == null) throw new IllegalArgumentException("orderId must not be null");
+		if (orderItemId == null) throw new IllegalArgumentException("orderItemId must not be null");
+		if (ownerId == null) throw new IllegalArgumentException("ownerId must not be null");
 		if (itemAmount == null || itemAmount <= 0) throw new IllegalArgumentException("itemAmount must be > 0");
 
 		return new PaymentSplit(payment, orderId, orderItemId, ownerId, itemAmount);
 	}
 
 	// getters
-	public String getSplitId() {
+	public UUID getSplitId() {
 		return splitId;
 	}
 
@@ -85,15 +85,15 @@ public class PaymentSplit {
 		return payment;
 	}
 
-	public String getOrderId() {
+	public UUID getOrderId() {
 		return orderId;
 	}
 
-	public String getOrderItemId() {
+	public UUID getOrderItemId() {
 		return orderItemId;
 	}
 
-	public String getOwnerId() {
+	public UUID getOwnerId() {
 		return ownerId;
 	}
 
@@ -103,6 +103,10 @@ public class PaymentSplit {
 
 	public Long getCanceledAmount() {
 		return canceledAmount;
+	}
+
+	public PaymentSplitStatus getStatus() {
+		return status;
 	}
 
 	public OffsetDateTime getCreatedAt() {
