@@ -34,6 +34,7 @@ public class AddressEntity {
 	@Column(name = "address_id", columnDefinition = "uuid")
 	private UUID addressId;
 
+    // User Table Mapping
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private UserEntity user;

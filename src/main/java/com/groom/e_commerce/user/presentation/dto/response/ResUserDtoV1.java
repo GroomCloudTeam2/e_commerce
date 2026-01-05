@@ -3,6 +3,7 @@ package com.groom.e_commerce.user.presentation.dto.response;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.groom.e_commerce.user.domain.entity.AddressEntity;
 import com.groom.e_commerce.user.domain.entity.UserEntity;
 import com.groom.e_commerce.user.domain.entity.UserRole;
 import com.groom.e_commerce.user.domain.entity.UserStatus;
@@ -20,10 +21,27 @@ public class ResUserDtoV1 {
 	private String phoneNumber;
 	private UserRole role;
 	private UserStatus status;
-	private LocalDateTime createdAt;
+	// 기본 배송지 추가
+    private ResAddressDtoV1 defaultAddress;
+    // --------------
+    private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-	public static ResUserDtoV1 from(UserEntity user) {
+
+    public static ResUserDtoV1 from(UserEntity user) {
+        return ResUserDtoV1.builder()
+                .id(user.getUserId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+
+	public static ResUserDtoV1 from(UserEntity user, AddressEntity defaultAddress) {
 		return ResUserDtoV1.builder()
 			.id(user.getUserId())
 			.email(user.getEmail())
@@ -31,6 +49,7 @@ public class ResUserDtoV1 {
 			.phoneNumber(user.getPhoneNumber())
 			.role(user.getRole())
 			.status(user.getStatus())
+            .defaultAddress(defaultAddress != null ? ResAddressDtoV1.from(defaultAddress) : null)
 			.createdAt(user.getCreatedAt())
 			.updatedAt(user.getUpdatedAt())
 			.build();
