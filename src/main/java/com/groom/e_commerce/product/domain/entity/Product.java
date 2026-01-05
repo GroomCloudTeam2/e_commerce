@@ -111,7 +111,7 @@ public class Product {
 	}
 
 	public void update(Category category, String title, String description, String thumbnailUrl,
-		BigDecimal price, Integer stockQuantity) {
+		BigDecimal price, Integer stockQuantity, ProductStatus status) {
 		if (category != null) {
 			this.category = category;
 		}
@@ -131,6 +131,16 @@ public class Product {
 			this.stockQuantity = stockQuantity;
 			syncStatusWithStock();
 		}
+		// Owner가 변경 가능한 상태: ON_SALE, SOLD_OUT, HIDDEN
+		if (status != null && isOwnerAllowedStatus(status)) {
+			this.status = status;
+		}
+	}
+
+	private boolean isOwnerAllowedStatus(ProductStatus status) {
+		return status == ProductStatus.ON_SALE
+			|| status == ProductStatus.SOLD_OUT
+			|| status == ProductStatus.HIDDEN;
 	}
 
 	private void syncStatusWithStock() {

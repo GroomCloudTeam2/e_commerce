@@ -172,10 +172,10 @@ public class ProductServiceV1 {
 	/**
 	 * 내 상품 목록 조회 (Owner)
 	 */
-	public Page<ResProductListDtoV1> getSellerProducts(ProductStatus status, Pageable pageable) {
+	public Page<ResProductListDtoV1> getSellerProducts(ProductStatus status, String keyword, Pageable pageable) {
 		UUID ownerId = SecurityUtil.getCurrentUserId();
 
-		Page<Product> products = productQueryRepository.findSellerProducts(ownerId, status, pageable);
+		Page<Product> products = productQueryRepository.findSellerProducts(ownerId, status, keyword, pageable);
 		return products.map(ResProductListDtoV1::from);
 	}
 
@@ -200,7 +200,8 @@ public class ProductServiceV1 {
 			request.getDescription(),
 			request.getThumbnailUrl(),
 			request.getPrice(),
-			request.getStockQuantity()
+			request.getStockQuantity(),
+			request.getStatus()
 		);
 
 		return ResProductDtoV1.from(product);
