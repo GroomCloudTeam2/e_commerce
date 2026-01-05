@@ -1,5 +1,8 @@
 package com.groom.e_commerce.product.application.service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -12,13 +15,17 @@ import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.global.util.SecurityUtil;
 import com.groom.e_commerce.product.domain.entity.Category;
 import com.groom.e_commerce.product.domain.entity.Product;
+import com.groom.e_commerce.product.domain.enums.ProductSortType;
 import com.groom.e_commerce.product.domain.enums.ProductStatus;
 import com.groom.e_commerce.product.domain.repository.ProductRepository;
 import com.groom.e_commerce.product.infrastructure.repository.ProductQueryRepository;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductCreateDtoV1;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductUpdateDtoV1;
+import com.groom.e_commerce.product.presentation.dto.response.ResProductCreateDtoV1;
+import com.groom.e_commerce.product.presentation.dto.response.ResProductDetailDtoV1;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductDtoV1;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductListDtoV1;
+import com.groom.e_commerce.product.presentation.dto.response.ResProductSearchDtoV1;
 
 import lombok.RequiredArgsConstructor;
 
@@ -111,6 +118,45 @@ public class ProductServiceV1 {
 	public Product findProductById(UUID productId) {
 		return productRepository.findByIdAndNotDeleted(productId)
 			.orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+	}
+
+	/**
+	 * 상품 목록 조회 (구매자용 - 공개 API)
+	 */
+	public Page<ResProductSearchDtoV1> searchProducts(
+		UUID categoryId,
+		String keyword,
+		BigDecimal minPrice,
+		BigDecimal maxPrice,
+		ProductSortType sortType,
+		Pageable pageable
+	) {
+		Page<Product> products = productQueryRepository.searchProductsForBuyer(
+			keyword, categoryId, minPrice, maxPrice, sortType, pageable
+		);
+		return products.map(ResProductSearchDtoV1::from);
+	}
+
+	/**
+	 * 상품 상세 조회 (구매자용 - 공개 API)
+	 */
+	public ResProductDetailDtoV1 getProductDetail(UUID productId) {
+		Product product = productRepository.findByIdWithOptions(productId)
+			.orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+		// 삭제된 상품은 조회 불가
+		if (product.isDeleted()) {
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+		}
+
+		// 판매중이 아닌 상품은 조회 불가 (구매자용)
+		if (product.getStatus() != ProductStatus.ON_SALE) {
+			throw new CustomException(ErrorCode.PRODUCT_NOT_ON_SALE);
+		}
+
+		// TODO: Review 도메인에서 avgRating, reviewCount 조회
+		// TODO: User 도메인에서 ownerStoreName 조회
+		return ResProductDetailDtoV1.from(product, null, null, null);
 	}
 
 	/**
