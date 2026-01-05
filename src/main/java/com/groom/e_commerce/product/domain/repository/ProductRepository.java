@@ -47,6 +47,23 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 	@Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.id = :id AND p.deletedAt IS NULL")
 	Optional<Product> findByIdWithVariants(@Param("id") UUID id);
 
+	// 상품 상세 조회용 - Step 1: 상품 + 카테고리
+	@Query("SELECT p FROM Product p "
+		+ "LEFT JOIN FETCH p.category c "
+		+ "LEFT JOIN FETCH c.parent "
+		+ "WHERE p.id = :id AND p.deletedAt IS NULL")
+	Optional<Product> findByIdWithCategory(@Param("id") UUID id);
+
+	// 상품 상세 조회용 - Step 2: 옵션만 조회
+	@Query("SELECT DISTINCT p FROM Product p "
+		+ "LEFT JOIN FETCH p.options "
+		+ "WHERE p.id = :id")
+	Optional<Product> findByIdWithOptionsOnly(@Param("id") UUID id);
+
+	// 상품 상세 조회용 - Step 3: variants
+	@Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.id = :id")
+	Optional<Product> findByIdWithVariantsOnly(@Param("id") UUID id);
+
 	// manager용 상태별 조회
 	Page<Product> findByStatusAndDeletedAtIsNull(ProductStatus status, Pageable pageable);
 

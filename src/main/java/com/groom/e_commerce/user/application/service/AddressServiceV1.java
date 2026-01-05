@@ -42,6 +42,8 @@ public class AddressServiceV1 {
 
 		AddressEntity address = AddressEntity.builder()
 			.user(user)
+                .recipient(request.getRecipient()) // 추가
+                .recipientPhone(request.getRecipientPhone()) // 추가
 			.zipCode(request.getZipCode())
 			.address(request.getAddress())
 			.detailAddress(request.getDetailAddress())
@@ -89,6 +91,7 @@ public class AddressServiceV1 {
 
 		addressRepository.clearDefaultAddress(userId);
 		address.setDefault(true);
+
 		log.info("Default address set: {}", addressId);
 	}
 

@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import com.groom.e_commerce.global.domain.entity.BaseEntity;
 import com.groom.e_commerce.product.domain.enums.VariantStatus;
 
 import jakarta.persistence.Column;
@@ -32,7 +33,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_product_variant")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProductVariant {
+public class ProductVariant extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -62,17 +63,6 @@ public class ProductVariant {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)
 	private VariantStatus status;
-
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
-
-	@Column(name = "deleted_at")
-	private LocalDateTime deletedAt;
 
 	@Builder
 	public ProductVariant(Product product, String skuCode, List<UUID> optionValueIds,

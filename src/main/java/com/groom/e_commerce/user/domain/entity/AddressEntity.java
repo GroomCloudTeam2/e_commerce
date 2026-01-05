@@ -1,10 +1,8 @@
 package com.groom.e_commerce.user.domain.entity;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.groom.e_commerce.global.domain.entity.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,30 +18,44 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "p_address")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
-public class AddressEntity {
+@SuperBuilder
+public class AddressEntity extends BaseEntity {
 
+	// =========================
+	// PK
+	// =========================
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	@Column(name = "address_id", columnDefinition = "uuid")
 	private UUID addressId;
 
+	// =========================
+	// Relation
+	// =========================
+	// User Table Mapping
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private UserEntity user;
 
+	// =========================
+	// Recipient Info
+	// =========================
 	@Column(name = "recipient", length = 50)
 	private String recipient;
 
 	@Column(name = "recipient_phone", length = 20)
 	private String recipientPhone;
 
+	// =========================
+	// Address Info
+	// =========================
 	@Column(name = "zip_code", length = 10, nullable = false)
 	private String zipCode;
 
@@ -53,25 +65,25 @@ public class AddressEntity {
 	@Column(name = "detail_address", length = 200, nullable = false)
 	private String detailAddress;
 
+	// =========================
+	// Default Flag
+	// =========================
 	@Column(name = "is_default", nullable = false)
 	@Builder.Default
 	private Boolean isDefault = false;
 
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
-
+	// =========================
+	// Business Methods
+	// =========================
 	public void update(String zipCode, String address, String detailAddress, String recipient, String recipientPhone,
 		Boolean isDefault) {
+
 		this.zipCode = zipCode;
 		this.address = address;
 		this.detailAddress = detailAddress;
-		this.recipient = recipient;           // <-- 업데이트 로직 추가
-		this.recipientPhone = recipientPhone; // <-- 업데이트 로직 추가
+		this.recipient = recipient;
+		this.recipientPhone = recipientPhone;
+
 		if (isDefault != null) {
 			this.isDefault = isDefault;
 		}

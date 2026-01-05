@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.groom.e_commerce.global.domain.entity.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -24,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_product_option_value")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProductOptionValue {
+public class ProductOptionValue extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -40,17 +42,6 @@ public class ProductOptionValue {
 
 	@Column(name = "sort_order", nullable = false)
 	private Integer sortOrder;
-
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
-
-	@Column(name = "deleted_at")
-	private LocalDateTime deletedAt;
 
 	@Builder
 	public ProductOptionValue(ProductOption option, String value, Integer sortOrder) {
