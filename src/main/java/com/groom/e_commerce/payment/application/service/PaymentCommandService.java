@@ -9,10 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groom.e_commerce.payment.application.port.in.CancelOrderItemPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.CancelPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ConfirmPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ReadyPaymentUseCase;
-import com.groom.e_commerce.payment.application.port.in.CancelOrderItemPaymentUseCase; // ✅ 추가
 import com.groom.e_commerce.payment.application.port.out.OrderQueryPort;
 import com.groom.e_commerce.payment.application.port.out.OrderStatePort;
 import com.groom.e_commerce.payment.application.port.out.TossPaymentPort;
@@ -42,7 +42,7 @@ public class PaymentCommandService implements
 	ConfirmPaymentUseCase,
 	CancelPaymentUseCase,
 	ReadyPaymentUseCase,
-	CancelOrderItemPaymentUseCase { // ✅ 추가
+	CancelOrderItemPaymentUseCase {
 
 	private static final String PG_PROVIDER_TOSS = "toss";
 
@@ -231,6 +231,10 @@ public class PaymentCommandService implements
 	 * ✅ (신규) 아이템 단위 부분취소
 	 * - Order -> Payment: {orderId, orderItemId, cancelAmount} 로 호출
 	 * - PaymentSplit(orderItemId) 조회/검증 -> 토스 부분취소 -> payment/payment_cancel/split 반영
+	 *
+	 * ⚠️ 전제:
+	 * - PaymentSplitRepository에 findByOrderItemIdWithLock(UUID) 가 존재해야 함
+	 * - PaymentSplit 엔티티에 addCancel(long) 이 구현되어 있어야 함
 	 */
 	@Override
 	public ResCancelResultV1 cancelOrderItem(UUID orderId, UUID orderItemId, long cancelAmount) {
@@ -283,10 +287,16 @@ public class PaymentCommandService implements
 		}
 
 		// 5) 토스 부분취소 호출(금액 기반)
-		TossCancelResponse tossCancel = tossPaymentPort.cancel(
-			payment.getPaymentKey(),
-			new TossCancelRequest("부분취소", cancelAmount)
-		);
+		TossCancelResponse tossCancel;
+		try {
+			tossCancel = tossPaymentPort.cancel(
+				payment.getPaymentKey(),
+				new TossCancelRequest("부분취소", cancelAmount)
+			);
+		} catch (TossApiException e) {
+			// 토스가 "이미 취소됨" 같은 멱등 에러를 주는 케이스가 있으면 여기서 처리 가능
+			throw e;
+		}
 
 		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null)
 			? tossCancel.canceledAt()
@@ -303,7 +313,7 @@ public class PaymentCommandService implements
 		// payment 누적/상태 반영
 		payment.addCancel(cancel);
 
-		// split 누적/상태 반영 (엔티티에 addCancel 구현돼있다는 전제)
+		// split 누적/상태 반영
 		split.addCancel(cancelAmount);
 
 		// 저장 (split은 별 repo라 명시적으로 저장)
@@ -318,7 +328,7 @@ public class PaymentCommandService implements
 	}
 
 	/**
-	 * ✅ 결제 취소(cancel) - (주문 단위/금액 기반)
+	 * ✅ 결제 취소(cancel)
 	 */
 	@Override
 	public ResCancelResultV1 cancel(String paymentKey, ReqCancelPaymentV1 request) {
