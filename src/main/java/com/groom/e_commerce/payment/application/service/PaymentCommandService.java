@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.groom.e_commerce.payment.application.port.in.CancelPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ConfirmPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ReadyPaymentUseCase;
+import com.groom.e_commerce.payment.application.port.in.CancelOrderItemPaymentUseCase; // ✅ 추가
 import com.groom.e_commerce.payment.application.port.out.OrderQueryPort;
 import com.groom.e_commerce.payment.application.port.out.OrderStatePort;
 import com.groom.e_commerce.payment.application.port.out.TossPaymentPort;
@@ -37,7 +38,11 @@ import com.groom.e_commerce.payment.presentation.exception.TossApiException;
 
 @Service
 @Transactional
-public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPaymentUseCase, ReadyPaymentUseCase {
+public class PaymentCommandService implements
+	ConfirmPaymentUseCase,
+	CancelPaymentUseCase,
+	ReadyPaymentUseCase,
+	CancelOrderItemPaymentUseCase { // ✅ 추가
 
 	private static final String PG_PROVIDER_TOSS = "toss";
 
@@ -223,7 +228,97 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 	}
 
 	/**
-	 * ✅ 결제 취소(cancel)
+	 * ✅ (신규) 아이템 단위 부분취소
+	 * - Order -> Payment: {orderId, orderItemId, cancelAmount} 로 호출
+	 * - PaymentSplit(orderItemId) 조회/검증 -> 토스 부분취소 -> payment/payment_cancel/split 반영
+	 */
+	@Override
+	public ResCancelResultV1 cancelOrderItem(UUID orderId, UUID orderItemId, long cancelAmount) {
+
+		if (cancelAmount <= 0) {
+			throw new PaymentException(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_CANCEL_AMOUNT",
+				"취소 금액이 올바르지 않습니다."
+			);
+		}
+
+		// 1) split 조회 (락 권장: 동시 취소 방지)
+		PaymentSplit split = paymentSplitRepository.findByOrderItemIdWithLock(orderItemId)
+			.orElseThrow(() -> new PaymentException(
+				HttpStatus.NOT_FOUND,
+				"SPLIT_NOT_FOUND",
+				"취소 대상 결제 라인(split)을 찾을 수 없습니다."
+			));
+
+		// 2) 요청 orderId 검증
+		if (!split.getOrderId().equals(orderId)) {
+			throw new PaymentException(
+				HttpStatus.BAD_REQUEST,
+				"ORDER_MISMATCH",
+				"주문 정보가 일치하지 않습니다."
+			);
+		}
+
+		// 3) split 기준 취소 가능 금액 검증
+		long splitRemaining = split.getItemAmount() - split.getCanceledAmount();
+		if (cancelAmount > splitRemaining) {
+			throw new PaymentException(
+				HttpStatus.BAD_REQUEST,
+				"EXCEED_SPLIT_CANCEL_AMOUNT",
+				"아이템 취소 가능 금액을 초과했습니다."
+			);
+		}
+
+		Payment payment = split.getPayment();
+
+		// 4) payment 기준 취소 가능 금액 검증(2중 안전장치)
+		long paymentRemaining = payment.getAmount() - payment.getCanceledAmount();
+		if (cancelAmount > paymentRemaining) {
+			throw new PaymentException(
+				HttpStatus.BAD_REQUEST,
+				"EXCEED_PAYMENT_CANCEL_AMOUNT",
+				"결제 취소 가능 금액을 초과했습니다."
+			);
+		}
+
+		// 5) 토스 부분취소 호출(금액 기반)
+		TossCancelResponse tossCancel = tossPaymentPort.cancel(
+			payment.getPaymentKey(),
+			new TossCancelRequest("부분취소", cancelAmount)
+		);
+
+		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null)
+			? tossCancel.canceledAt()
+			: OffsetDateTime.now();
+
+		// 6) payment_cancel 기록 + 누적 반영
+		PaymentCancel cancel = new PaymentCancel(
+			tossCancel.paymentKey(),
+			cancelAmount,
+			"부분취소",
+			canceledAt
+		);
+
+		// payment 누적/상태 반영
+		payment.addCancel(cancel);
+
+		// split 누적/상태 반영 (엔티티에 addCancel 구현돼있다는 전제)
+		split.addCancel(cancelAmount);
+
+		// 저장 (split은 별 repo라 명시적으로 저장)
+		paymentRepository.save(payment);
+		paymentSplitRepository.save(split);
+
+		return ResCancelResultV1.of(
+			payment.getPaymentKey(),
+			payment.getStatus().name(),
+			payment.getCanceledAmount()
+		);
+	}
+
+	/**
+	 * ✅ 결제 취소(cancel) - (주문 단위/금액 기반)
 	 */
 	@Override
 	public ResCancelResultV1 cancel(String paymentKey, ReqCancelPaymentV1 request) {
@@ -327,25 +422,13 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 
 		List<PaymentSplit> splits = items.stream()
 			.filter(i -> !paymentSplitRepository.existsByOrderItemId(i.orderItemId()))
-			.map(i -> {
-				// ✅ PaymentSplit이 UUID를 받는 형태라면 이대로
-				return PaymentSplit.of(
-					payment,
-					orderId,
-					i.orderItemId(),
-					i.ownerId(),
-					i.subtotal()
-				);
-
-				// ❗만약 PaymentSplit이 String 컬럼/생성자라면 아래처럼 변환
-				// return PaymentSplit.of(
-				//     payment,
-				//     orderId.toString(),
-				//     i.orderItemId().toString(),
-				//     i.ownerId().toString(),
-				//     i.subtotal()
-				// );
-			})
+			.map(i -> PaymentSplit.of(
+				payment,
+				orderId,
+				i.orderItemId(),
+				i.ownerId(),
+				i.subtotal()
+			))
 			.collect(Collectors.toList());
 
 		if (!splits.isEmpty()) {
