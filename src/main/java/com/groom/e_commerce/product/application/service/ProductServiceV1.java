@@ -24,6 +24,7 @@ import com.groom.e_commerce.product.domain.repository.ProductRepository;
 import com.groom.e_commerce.product.domain.repository.ProductVariantRepository;
 import com.groom.e_commerce.product.infrastructure.repository.ProductQueryRepository;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductCreateDtoV1;
+import com.groom.e_commerce.product.presentation.dto.request.ReqProductSuspendDtoV1;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductUpdateDtoV1;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductCreateDtoV1;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductDetailDtoV1;
@@ -273,6 +274,34 @@ public class ProductServiceV1 {
 		// TODO: Review 도메인에서 avgRating, reviewCount 조회
 		// TODO: User 도메인에서 ownerStoreName 조회
 		return ResProductDetailDtoV1.from(product, null, null, null);
+	}
+
+	/**
+	 * 상품 목록 조회 (Manager)
+	 */
+	public Page<ResProductListDtoV1> getAllProductsForManager(String keyword, ProductStatus status, Pageable pageable) {
+		Page<Product> products = productQueryRepository.findAllForManager(keyword, status, pageable);
+		return products.map(ResProductListDtoV1::from);
+	}
+
+	/**
+	 * 상품 정지 (Manager)
+	 */
+	@Transactional
+	public ResProductDtoV1 suspendProduct(UUID productId, ReqProductSuspendDtoV1 request) {
+		Product product = findProductById(productId);
+		product.suspend(request.getReason());
+		return ResProductDtoV1.from(product);
+	}
+
+	/**
+	 * 상품 정지 해제 (Manager)
+	 */
+	@Transactional
+	public ResProductDtoV1 restoreProduct(UUID productId) {
+		Product product = findProductById(productId);
+		product.restore();
+		return ResProductDtoV1.from(product);
 	}
 
 	/**
