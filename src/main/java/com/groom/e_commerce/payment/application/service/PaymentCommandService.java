@@ -11,6 +11,7 @@ import com.groom.e_commerce.payment.application.port.in.CancelPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ConfirmPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ReadyPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.out.OrderQueryPort;
+import com.groom.e_commerce.payment.application.port.out.OrderStatePort;
 import com.groom.e_commerce.payment.application.port.out.TossPaymentPort;
 import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.entity.PaymentCancel;
@@ -40,17 +41,20 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 	private final TossPaymentPort tossPaymentPort;
 	private final TossPaymentsProperties tossPaymentsProperties;
 	private final OrderQueryPort orderQueryPort;
+	private final OrderStatePort orderStatePort;
 
 	public PaymentCommandService(
 		PaymentRepository paymentRepository,
 		TossPaymentPort tossPaymentPort,
 		TossPaymentsProperties tossPaymentsProperties,
-		OrderQueryPort orderQueryPort
+		OrderQueryPort orderQueryPort,
+		OrderStatePort orderStatePort
 	) {
 		this.paymentRepository = paymentRepository;
 		this.tossPaymentPort = tossPaymentPort;
 		this.tossPaymentsProperties = tossPaymentsProperties;
 		this.orderQueryPort = orderQueryPort;
+		this.orderStatePort = orderStatePort;
 	}
 
 	/**
@@ -202,6 +206,10 @@ public class PaymentCommandService implements ConfirmPaymentUseCase, CancelPayme
 		payment.markPaid(toss.paymentKey(), toss.approvedAt());
 
 		Payment saved = paymentRepository.save(payment);
+
+		//Order 상태 변경 (PENDING -> PAID)
+		orderStatePort.payOrder(orderId);
+
 		return ResPaymentV1.from(saved);
 	}
 

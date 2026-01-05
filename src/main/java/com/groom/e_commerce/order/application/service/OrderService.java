@@ -18,6 +18,9 @@ import com.groom.e_commerce.order.domain.repository.OrderRepository;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateItemRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateRequest;
 import com.groom.e_commerce.order.presentation.dto.response.OrderResponse;
+import com.groom.e_commerce.payment.domain.entity.Payment;
+import com.groom.e_commerce.payment.domain.model.PaymentStatus;
+import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
 
@@ -34,6 +37,7 @@ public class OrderService {
 	private final OrderItemRepository orderItemRepository;
 	private final AddressServiceV1 addressService;
 
+	private final PaymentRepository paymentRepository;
 	// MSA 핵심: Repository가 아니라 Service(또는 Client)를 주입받음
 	// private final ProductService productService;
 	// private final AddressService addressService;
@@ -109,8 +113,16 @@ public class OrderService {
 		// 6. OrderItem 일괄 저장
 		orderItemRepository.saveAll(orderItems);
 
-		// order.updatePaymentAmount(totalAmount);
+		order.updatePaymentAmount(totalAmount);
 		System.out.println("최종 결제 금액: " + totalAmount);
+		Payment payment = Payment.builder()
+			.orderId(order.getOrderId())
+			.amount(totalAmount)
+			.status(PaymentStatus.READY) // 중요: 초기 상태
+			// .paymentKey(null) // 빌더에 따라 생략 가능
+			.build();
+
+		paymentRepository.save(payment);
 
 		return order.getOrderId();
 	}

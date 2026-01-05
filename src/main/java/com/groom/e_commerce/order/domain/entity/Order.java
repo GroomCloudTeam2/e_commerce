@@ -85,6 +85,11 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 
 	/* ================= 상태 전이 메서드 ================= */
 
+	// 결제 금액 업데이트
+	public void updatePaymentAmount(long totalAmount) {
+		this.totalPaymentAmount = BigInteger.valueOf(totalAmount);
+	}
+
 	// 결제 완료 (PENDING → PAID)
 	public void markPaid() {
 		if (this.status != OrderStatus.PENDING) {
