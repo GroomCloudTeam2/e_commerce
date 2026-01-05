@@ -23,8 +23,6 @@ public class OrderStateAdapter implements OrderStatePort {
 		Order order = orderRepository.findById(orderId)
 			.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. ID: " + orderId));
 
-		// Order 엔티티에 markPaid() 또는 pay() 메서드가 있다고 가정
-		// 만약 없다면: order.changeStatus(OrderStatus.PAID); 형태로 작성
 		order.markPaid();
 	}
 }
