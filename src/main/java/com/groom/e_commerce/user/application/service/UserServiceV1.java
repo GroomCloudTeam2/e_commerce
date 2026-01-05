@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import com.groom.e_commerce.user.domain.entity.AddressEntity;
+import com.groom.e_commerce.user.domain.repository.AddressRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,11 +33,20 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceV1 {
 
 	private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
 	private final PasswordEncoder passwordEncoder;
 
 	public ResUserDtoV1 getMe() {
 		UUID userId = SecurityUtil.getCurrentUserId();
-		return ResUserDtoV1.from(findUserById(userId));
+
+        // -- 기본 배송지 조회 --
+        UserEntity user = findUserById(userId);
+
+        AddressEntity defaultAddress = addressRepository
+                .findByUserUserIdAndIsDefaultTrue(userId)
+                .orElse(null);
+
+        return ResUserDtoV1.from(user, defaultAddress);
 	}
 
 	@Transactional
