@@ -1,5 +1,6 @@
 package com.groom.e_commerce.order.domain.repository;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
 		@Param("orderId") UUID orderId,
 		@Param("productId") UUID productId
 	);
+	@Query("select oi from OrderItem oi join fetch oi.order where oi.orderItemId in :orderItemIds")
+	List<OrderItem> findAllByOrderItemIdIn(@Param("orderItemIds") List<UUID> orderItemIds);
 }
