@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.enums.ProductSortType;
 import com.groom.e_commerce.product.domain.enums.ProductStatus;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -117,6 +118,7 @@ public class ProductQueryRepository {
 	public Page<Product> findSellerProducts(
 		UUID ownerId,
 		ProductStatus status,
+		String keyword,
 		Pageable pageable
 	) {
 		List<Product> content = queryFactory
@@ -125,6 +127,7 @@ public class ProductQueryRepository {
 			.where(
 				ownerIdEq(ownerId),
 				statusEq(status),
+				keywordContains(keyword),
 				notDeleted()
 			)
 			.orderBy(product.createdAt.desc())
@@ -138,6 +141,7 @@ public class ProductQueryRepository {
 			.where(
 				ownerIdEq(ownerId),
 				statusEq(status),
+				keywordContains(keyword),
 				notDeleted()
 			);
 
