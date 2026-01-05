@@ -7,10 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.groom.e_commerce.payment.application.port.in.CancelOrderItemPaymentUseCase;
+import com.groom.e_commerce.payment.presentation.dto.request.ReqCancelOrderItemPaymentV1;
 import com.groom.e_commerce.payment.presentation.dto.response.ResCancelResultV1;
 
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/api/v1/payment")
 public class PaymentCancelItemControllerV1 {
 
 	private final CancelOrderItemPaymentUseCase cancelOrderItemPaymentUseCase;
@@ -19,12 +20,19 @@ public class PaymentCancelItemControllerV1 {
 		this.cancelOrderItemPaymentUseCase = cancelOrderItemPaymentUseCase;
 	}
 
+	/**
+	 * Order -> Payment: {orderId, orderItemId, cancelAmount} 전달
+	 * 예) POST /api/v1/payment/orders/{orderId}/items/{orderItemId}/cancel
+	 */
 	@PostMapping("/orders/{orderId}/items/{orderItemId}/cancel")
 	public ResponseEntity<ResCancelResultV1> cancelOrderItem(
 		@PathVariable UUID orderId,
 		@PathVariable UUID orderItemId,
-		@RequestParam long cancelAmount
+		@RequestBody ReqCancelOrderItemPaymentV1 request
 	) {
-		return ResponseEntity.ok(cancelOrderItemPaymentUseCase.cancelOrderItem(orderId, orderItemId, cancelAmount));
+		ResCancelResultV1 result =
+			cancelOrderItemPaymentUseCase.cancelOrderItem(orderId, orderItemId, request.cancelAmount());
+
+		return ResponseEntity.ok(result);
 	}
 }
