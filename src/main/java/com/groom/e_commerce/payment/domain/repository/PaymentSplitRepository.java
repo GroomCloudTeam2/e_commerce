@@ -23,3 +23,5 @@ public interface PaymentSplitRepository {
 	List<PaymentSplit> findByPaymentId(UUID paymentId);
 	List<PaymentSplit> findByOwnerId(UUID ownerId);
 }
+
+
