@@ -2,6 +2,7 @@
 package com.groom.e_commerce.payment.domain.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.groom.e_commerce.payment.domain.entity.PaymentSplit;
 
@@ -11,11 +12,11 @@ public interface PaymentSplitRepository {
 
 	List<PaymentSplit> saveAll(Iterable<PaymentSplit> splits);
 
-	List<PaymentSplit> findByOrderId(String orderId);
+	List<PaymentSplit> findByOrderId(UUID orderId);
 
-	List<PaymentSplit> findByOwnerId(String ownerId);
+	List<PaymentSplit> findByOwnerId(UUID ownerId);
 
-	List<PaymentSplit> findByPaymentId(String paymentId);
+	List<PaymentSplit> findByPaymentId(UUID paymentId);
 
-	boolean existsByOrderItemId(String orderItemId);
+	boolean existsByOrderItemId(UUID orderItemId);
 }
