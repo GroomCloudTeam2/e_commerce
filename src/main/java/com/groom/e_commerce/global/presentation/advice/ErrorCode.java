@@ -39,7 +39,9 @@ public enum ErrorCode {
     PRODUCT_NOT_SUSPENDED(HttpStatus.BAD_REQUEST, "PRODUCT_NOT_SUSPENDED", "판매 정지 상태가 아닙니다."),
     PRODUCT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "PRODUCT_ACCESS_DENIED", "해당 상품에 대한 접근 권한이 없습니다."),
     STOCK_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "STOCK_NOT_ENOUGH", "재고가 부족합니다."),
-    PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "PRODUCT_HAS_ORDERS", "주문이 존재하는 상품은 삭제할 수 없습니다.");
+    PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "PRODUCT_HAS_ORDERS", "주문이 존재하는 상품은 삭제할 수 없습니다."),
+    CATEGORY_HAS_CHILDREN(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_CHILDREN", "하위 카테고리가 존재하여 삭제할 수 없습니다."),
+    CATEGORY_HAS_PRODUCTS(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_PRODUCTS", "등록된 상품이 존재하여 삭제할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
