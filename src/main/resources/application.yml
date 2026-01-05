@@ -1,43 +1,9 @@
-#spring:
-#  application:
-#    name: e-commerce
-#
-#  datasource:
-#    url: jdbc:postgresql://localhost:5432/ecommerce
-#    username: postgres
-#    password: password
-#    driver-class-name: org.postgresql.Driver
-#
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#        default_batch_fetch_size: 100
-#
-#  h2:
-#    console:
-#      enabled: true
-#
-#jwt:
-#  secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
-#  access-token-validity: 3600000  # 1시간 (밀리초)
-#  refresh-token-validity: 604800000  # 7일 (밀리초)
-#
-#logging:
-#  level:
-#    com.groom.ecommerce: DEBUG
-#    org.hibernate.SQL: DEBUG
-
 spring:
   application:
-    name: e-commerce
+    name: e_commerce
 
   datasource:
-    # 👇 중요: 아까 도커 설정(POSTGRES_DB)과 이름을 똑같이 맞춰야 연결됩니다!
-    url: jdbc:postgresql://localhost:5432/ecommerce
+    url: jdbc:postgresql://localhost:5400/ecommerce
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -53,10 +19,6 @@ spring:
         # 👇 (선택) PostgreSQL 전용 방언 설정 (없어도 되지만 넣으면 더 안정적)
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # h2:  <-- PostgreSQL 쓸 때는 필요 없으니 지웠습니다.
-  #   console:
-  #     enabled: true
-
   security:
     user:
       name: user
@@ -67,6 +29,14 @@ jwt:
   secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
   access-token-validity: 3600000
   refresh-token-validity: 604800000
+
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:dummy}
+    base-url: https://api.openai.com
+    model: gpt-4o-mini
+
+
 
 logging:
   level:

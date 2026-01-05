@@ -8,4 +8,4 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password  # 비밀번호 (자유롭게 변경 가능)
-      POSTGRES_DB: ecommerce_order # 데이터베이스 이름
+      POSTGRES_DB: ecommerce # 데이터베이스 이름

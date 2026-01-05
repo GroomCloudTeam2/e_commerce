@@ -19,11 +19,6 @@ public class SecurityUtil {
 		if (auth == null || !auth.isAuthenticated()) {
 			throw new CustomException(ErrorCode.UNAUTHORIZED);
 		}
-		// ----
-		// JWT subject에서 userId 추출
-		//return UUID.fromString(auth.getName());
-		// ----
-
 		CustomUserDetails userDetails = (CustomUserDetails)auth.getPrincipal();
 		return userDetails.getUserId();
 	}

@@ -60,4 +60,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
 	// 장바구니/주문 시 여러 상품 정보를 한 번에 조회할 때 사용
 	List<Product> findByIdIn(List<UUID> ids);
+
+	Optional<String> findTitleById(UUID id);
+
 }
