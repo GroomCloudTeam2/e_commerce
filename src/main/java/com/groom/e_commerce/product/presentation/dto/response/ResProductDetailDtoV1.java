@@ -58,13 +58,21 @@ public class ResProductDetailDtoV1 {
 		private static String buildFullPath(Category category) {
 			StringBuilder path = new StringBuilder();
 			Category current = category;
+			int maxDepth = 10; // 무한 루프 방지
 
-			while (current != null) {
-				if (path.length() > 0) {
-					path.insert(0, " > ");
+			try {
+				while (current != null && maxDepth-- > 0) {
+					if (!path.isEmpty()) {
+						path.insert(0, " > ");
+					}
+					path.insert(0, current.getName());
+					current = current.getParent();
 				}
-				path.insert(0, current.getName());
-				current = current.getParent();
+			} catch (Exception e) {
+				// LazyInitializationException 등 발생 시 현재까지 구성된 경로 반환
+				if (path.isEmpty()) {
+					return category.getName();
+				}
 			}
 
 			return path.toString();

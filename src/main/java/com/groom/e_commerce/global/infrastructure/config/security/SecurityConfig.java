@@ -44,6 +44,12 @@ public class SecurityConfig {
 				// 결제 관련 엔드포인트 (ready/success/fail/confirm 등 포함)
 				.requestMatchers("/api/v1/payments/**").permitAll()
 
+				// 상품 공개 API (구매자용)
+				.requestMatchers("/api/v1/products", "/api/v1/products/{productId}").permitAll()
+
+				// 카테고리 공개 API
+				.requestMatchers("/api/v1/categories", "/api/v1/categories/{categoryId}").permitAll()
+
 				// Swagger
 				.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 

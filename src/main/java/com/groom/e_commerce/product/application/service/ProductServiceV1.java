@@ -248,8 +248,10 @@ public class ProductServiceV1 {
 	/**
 	 * 상품 상세 조회 (구매자용 - 공개 API)
 	 */
+	@Transactional(readOnly = true)
 	public ResProductDetailDtoV1 getProductDetail(UUID productId) {
-		Product product = productRepository.findByIdWithOptions(productId)
+		// Step 1: 상품 + 카테고리 조회
+		Product product = productRepository.findByIdWithCategory(productId)
 			.orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
 		// 삭제된 상품은 조회 불가
@@ -261,6 +263,12 @@ public class ProductServiceV1 {
 		if (product.getStatus() != ProductStatus.ON_SALE) {
 			throw new CustomException(ErrorCode.PRODUCT_NOT_ON_SALE);
 		}
+
+		// Step 2: 옵션 + 옵션값 조회 (같은 영속성 컨텍스트)
+		productRepository.findByIdWithOptionsOnly(productId);
+
+		// Step 3: variants 조회 (같은 영속성 컨텍스트)
+		productRepository.findByIdWithVariantsOnly(productId);
 
 		// TODO: Review 도메인에서 avgRating, reviewCount 조회
 		// TODO: User 도메인에서 ownerStoreName 조회

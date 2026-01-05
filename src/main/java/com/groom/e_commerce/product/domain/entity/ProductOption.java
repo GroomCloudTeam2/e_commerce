@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -49,6 +50,7 @@ public class ProductOption extends BaseEntity {
 
 	// 해당 옵션이 가질 수 있는 값들의 목록
 	@OneToMany(mappedBy = "option", cascade = CascadeType.ALL, orphanRemoval = true)
+	@BatchSize(size = 100)
 	private List<ProductOptionValue> optionValues = new ArrayList<>();
 
 	@Builder
