@@ -8,11 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.AddressEntity;
-import com.groom.e_commerce.user.domain.entity.UserEntity;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 import com.groom.e_commerce.user.domain.repository.AddressRepository;
-import com.groom.e_commerce.user.presentation.dto.request.ReqAddressDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.address.ReqAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +42,8 @@ public class AddressServiceV1 {
 
 		AddressEntity address = AddressEntity.builder()
 			.user(user)
-                .recipient(request.getRecipient()) // 추가
-                .recipientPhone(request.getRecipientPhone()) // 추가
+			.recipient(request.getRecipient()) // 추가
+			.recipientPhone(request.getRecipientPhone()) // 추가
 			.zipCode(request.getZipCode())
 			.address(request.getAddress())
 			.detailAddress(request.getDetailAddress())

@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqAddressDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.address.ReqAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +35,7 @@ public class AddressControllerV1 {
 	@Operation(summary = "배송지 목록 조회")
 	@GetMapping
 	public ResponseEntity<List<ResAddressDtoV1>> getAddresses(@AuthenticationPrincipal CustomUserDetails user) {
-        return ResponseEntity.ok(addressService.getAddresses(user.getUserId()));
+		return ResponseEntity.ok(addressService.getAddresses(user.getUserId()));
 	}
 
 	@Operation(summary = "배송지 등록")

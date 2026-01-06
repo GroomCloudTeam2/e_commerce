@@ -8,8 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.groom.e_commerce.user.domain.entity.UserEntity;
-import com.groom.e_commerce.user.domain.entity.UserRole;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {

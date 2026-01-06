@@ -13,13 +13,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.groom.e_commerce.review.application.service.ReviewAiSummaryService;
 import com.groom.e_commerce.user.application.service.AdminServiceV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqCreateManagerDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResUserDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResUserListDtoV1;
+import com.groom.e_commerce.user.domain.entity.seller.SellerStatus;
+import com.groom.e_commerce.user.presentation.dto.request.admin.ReqCreateManagerDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.seller.ReqRejectSellerDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.admin.ResSellerApprovalListDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResUserListDtoV1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -84,4 +88,45 @@ public class AdminControllerV1 {
 		return ResponseEntity.ok(adminService.getManagerList(pageable));
 	}
 
+	// ==================== Seller 승인 관리 ====================
+
+	@Operation(summary = "승인 대기 중인 Seller 목록 조회 (Manager)")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+	@GetMapping("/sellers/pending")
+	public ResponseEntity<ResSellerApprovalListDtoV1> getPendingSellerList(
+		@PageableDefault(size = 20) Pageable pageable) {
+		return ResponseEntity.ok(adminService.getPendingSellerList(pageable));
+	}
+
+	@Operation(summary = "상태별 Seller 목록 조회 (Manager)")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+	@GetMapping("/sellers")
+	public ResponseEntity<ResSellerApprovalListDtoV1> getSellerListByStatus(
+		@RequestParam(defaultValue = "PENDING") SellerStatus status,
+		@PageableDefault(size = 20) Pageable pageable) {
+		return ResponseEntity.ok(adminService.getSellerListByStatus(status, pageable));
+	}
+
+	@Operation(summary = "Seller 승인 요청 상세 조회 (Manager)")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+	@GetMapping("/sellers/{sellerId}")
+	public ResponseEntity<ResSellerApprovalDtoV1> getSellerApprovalDetail(@PathVariable UUID sellerId) {
+		return ResponseEntity.ok(adminService.getSellerApprovalDetail(sellerId));
+	}
+
+	@Operation(summary = "Seller 승인 (Manager)")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+	@PostMapping("/sellers/{sellerId}/approve")
+	public ResponseEntity<ResSellerApprovalDtoV1> approveSeller(@PathVariable UUID sellerId) {
+		return ResponseEntity.ok(adminService.approveSeller(sellerId));
+	}
+
+	@Operation(summary = "Seller 승인 거절 (Manager)")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
+	@PostMapping("/sellers/{sellerId}/reject")
+	public ResponseEntity<ResSellerApprovalDtoV1> rejectSeller(
+		@PathVariable UUID sellerId,
+		@Valid @RequestBody ReqRejectSellerDtoV1 request) {
+		return ResponseEntity.ok(adminService.rejectSeller(sellerId, request.getRejectedReason()));
+	}
 }

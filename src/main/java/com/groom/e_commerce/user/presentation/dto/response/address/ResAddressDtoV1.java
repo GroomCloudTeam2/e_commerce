@@ -1,8 +1,8 @@
-package com.groom.e_commerce.user.presentation.dto.response;
+package com.groom.e_commerce.user.presentation.dto.response.address;
 
 import java.util.UUID;
 
-import com.groom.e_commerce.user.domain.entity.AddressEntity;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
 
 import lombok.Builder;
 import lombok.Getter;

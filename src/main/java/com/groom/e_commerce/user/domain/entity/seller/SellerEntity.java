@@ -1,11 +1,15 @@
-package com.groom.e_commerce.user.domain.entity;
+package com.groom.e_commerce.user.domain.entity.seller;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,7 +19,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -52,6 +55,9 @@ public class SellerEntity extends BaseEntity {
 	@Column(name = "business_no", length = 50)
 	private String businessNo;
 
+	@Column(name = "approval_request", length = 500)
+	private String approvalRequest;
+
 	// =========================
 	// Store Address
 	// =========================
@@ -76,9 +82,18 @@ public class SellerEntity extends BaseEntity {
 	// =========================
 	// Status
 	// =========================
-	@Column(name = "status", length = 20)
-	@Builder.Default
-	private String status = "ACTIVE";
+	@Enumerated(EnumType.STRING)
+	@Column(name = "seller_status", length = 20, nullable = false)
+	private SellerStatus sellerStatus;
+
+	@Column(name = "approved_at")
+	private LocalDateTime approvedAt;
+
+	@Column(name = "rejected_reason", length = 200)
+	private String rejectedReason;
+
+	@Column(name = "rejected_at")
+	private LocalDateTime rejectedAt;
 
 	// =========================
 	// Business Methods
@@ -107,5 +122,34 @@ public class SellerEntity extends BaseEntity {
 		if (account != null) {
 			this.account = account;
 		}
+	}
+
+	// =========================
+	// Approval Methods
+	// =========================
+	public void approve() {
+		this.sellerStatus = SellerStatus.APPROVED;
+		this.approvedAt = LocalDateTime.now();
+		this.rejectedReason = null;
+		this.rejectedAt = null;
+	}
+
+	public void reject(String rejectedReason) {
+		this.sellerStatus = SellerStatus.REJECTED;
+		this.rejectedReason = rejectedReason;
+		this.rejectedAt = LocalDateTime.now();
+		this.approvedAt = null;
+	}
+
+	public boolean isPending() {
+		return this.sellerStatus == SellerStatus.PENDING;
+	}
+
+	public boolean isApproved() {
+		return this.sellerStatus == SellerStatus.APPROVED;
+	}
+
+	public boolean isRejected() {
+		return this.sellerStatus == SellerStatus.REJECTED;
 	}
 }

@@ -1,15 +1,17 @@
-package com.groom.e_commerce.user.presentation.dto.request;
+package com.groom.e_commerce.user.presentation.dto.request.user;
 
-import com.groom.e_commerce.user.domain.entity.UserRole;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
 public class ReqSignupDtoV1 {
 
@@ -37,8 +39,9 @@ public class ReqSignupDtoV1 {
 	private String detailAddress;
 	private String bank;
 	private String account;
+	private String approvalRequest;
 
 	public boolean isOwner() {
-		return this.role == UserRole.OWNER;
+		return this.role == UserRole.SELLER;
 	}
 }
