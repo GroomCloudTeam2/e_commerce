@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqAddressDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.address.ReqAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +35,7 @@ public class AddressControllerV1 {
 	@Operation(summary = "배송지 목록 조회")
 	@GetMapping
 	public ResponseEntity<List<ResAddressDtoV1>> getAddresses(@AuthenticationPrincipal CustomUserDetails user) {
-		return ResponseEntity.ok(addressService.getAddresses(user.userId()));
+		return ResponseEntity.ok(addressService.getAddresses(user.getUserId()));
 	}
 
 	@Operation(summary = "배송지 등록")
@@ -43,7 +43,7 @@ public class AddressControllerV1 {
 	public ResponseEntity<Void> createAddress(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@Valid @RequestBody ReqAddressDtoV1 request) {
-		addressService.createAddress(user.userId(), request);
+		addressService.createAddress(user.getUserId(), request);
 		return ResponseEntity.ok().build();
 	}
 
@@ -53,7 +53,7 @@ public class AddressControllerV1 {
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID addressId,
 		@Valid @RequestBody ReqAddressDtoV1 request) {
-		addressService.updateAddress(user.userId(), addressId, request);
+		addressService.updateAddress(user.getUserId(), addressId, request);
 		return ResponseEntity.ok().build();
 	}
 
@@ -62,7 +62,7 @@ public class AddressControllerV1 {
 	public ResponseEntity<Void> deleteAddress(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID addressId) {
-		addressService.deleteAddress(user.userId(), addressId);
+		addressService.deleteAddress(user.getUserId(), addressId);
 		return ResponseEntity.ok().build();
 	}
 
@@ -71,7 +71,7 @@ public class AddressControllerV1 {
 	public ResponseEntity<Void> setDefaultAddress(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID addressId) {
-		addressService.setDefaultAddress(user.userId(), addressId);
+		addressService.setDefaultAddress(user.getUserId(), addressId);
 		return ResponseEntity.ok().build();
 	}
 }

@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
 import com.groom.e_commerce.user.application.service.UserServiceV1;
-import com.groom.e_commerce.user.domain.entity.PeriodType;
-import com.groom.e_commerce.user.presentation.dto.request.ReqUpdateUserDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResSalesStatDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResUserDtoV1;
+import com.groom.e_commerce.user.domain.entity.user.PeriodType;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqUpdateUserDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.seller.ResSalesStatDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

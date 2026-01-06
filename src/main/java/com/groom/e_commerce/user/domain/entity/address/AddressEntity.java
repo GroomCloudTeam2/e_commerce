@@ -1,8 +1,9 @@
-package com.groom.e_commerce.user.domain.entity;
+package com.groom.e_commerce.user.domain.entity.address;
 
 import java.util.UUID;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

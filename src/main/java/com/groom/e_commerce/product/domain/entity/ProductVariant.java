@@ -8,6 +8,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.product.domain.enums.VariantStatus;
 
 import jakarta.persistence.Column;
@@ -96,7 +98,7 @@ public class ProductVariant extends BaseEntity {
 
 	public void decreaseStock(int quantity) {
 		if (this.stockQuantity < quantity) {
-			throw new IllegalStateException("재고가 부족합니다.");
+			throw new CustomException(ErrorCode.STOCK_NOT_ENOUGH);
 		}
 		this.stockQuantity -= quantity;
 		updateStatusByStock();

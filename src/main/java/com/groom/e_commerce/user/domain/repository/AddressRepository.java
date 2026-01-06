@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.groom.e_commerce.user.domain.entity.AddressEntity;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
 
 @Repository
 public interface AddressRepository extends JpaRepository<AddressEntity, UUID> {
