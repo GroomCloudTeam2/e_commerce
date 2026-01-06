@@ -3,6 +3,7 @@ package com.groom.e_commerce.cart.domain.entity;
 import java.util.UUID;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.product.application.dto.StockManagement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "p_cart_item")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CartItem extends BaseEntity {
+public class CartItem extends BaseEntity implements StockManagement {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -51,7 +52,9 @@ public class CartItem extends BaseEntity {
 		this.variantId = variantId;
 		this.quantity = quantity;
 	}
-
+	public void updateQuantity(int quantity) {
+		this.quantity = quantity;
+	}
 	public void addQuantity(int count) {
 		this.quantity += count;
 	}

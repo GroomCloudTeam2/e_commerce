@@ -2,6 +2,10 @@ package com.groom.e_commerce.cart.presentation.dto.response;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import com.groom.e_commerce.cart.domain.entity.CartItem;
+import com.groom.e_commerce.product.application.dto.ProductCartInfo;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,4 +23,21 @@ public class CartItemResponse {
 	private BigDecimal totalPrice; // price * quantity
 	private int stockQuantity;   // 실시간 재고
 	private boolean isAvailable; // 현재 구매 가능 여부
+
+	public static CartItemResponse of(CartItem item, ProductCartInfo info) {
+		return CartItemResponse.builder()
+			.cartItemId(item.getId())
+			.productId(item.getProductId())
+			.variantId(item.getVariantId())
+			.productName(info.getProductName())
+			.optionName(info.getOptionName())
+			.thumbnailUrl(info.getThumbnailUrl())
+			.price(info.getPrice())
+			.quantity(item.getQuantity())
+			.totalPrice(info.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+			.stockQuantity(info.getStockQuantity())
+			.isAvailable(info.isAvailable())
+			.build();
+
+	}
 }

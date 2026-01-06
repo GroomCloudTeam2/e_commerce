@@ -1,5 +1,6 @@
 package com.groom.e_commerce.cart.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +16,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
 	// 2. 단일 상품 중복 체크 (variantId가 없을 때 - productId가 같고 variantId가 null인 것)
 	Optional<CartItem> findByCartAndProductIdAndVariantIdIsNull(Cart cart, UUID productId);
+
+	List<CartItem> findAllByCart(Cart cart);
 }

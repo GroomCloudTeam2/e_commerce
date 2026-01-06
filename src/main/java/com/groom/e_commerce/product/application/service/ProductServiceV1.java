@@ -30,8 +30,6 @@ import com.groom.e_commerce.product.domain.enums.VariantStatus;
 import com.groom.e_commerce.product.domain.repository.ProductRepository;
 import com.groom.e_commerce.product.domain.repository.ProductVariantRepository;
 import com.groom.e_commerce.product.infrastructure.repository.ProductQueryRepository;
-import com.groom.e_commerce.product.application.dto.ProductCartInfo;
-import com.groom.e_commerce.product.domain.enums.VariantStatus;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductCreateDtoV1;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductSuspendDtoV1;
 import com.groom.e_commerce.product.presentation.dto.request.ReqProductUpdateDtoV1;
@@ -325,7 +323,7 @@ public class ProductServiceV1 {
 	/**
 	 * 장바구니 목록 조회를 위한 상품 정보 Bulk 조회
 	 */
-	public List<ProductCartInfo> getProductCartInfos(List<StockManagement> items) {
+	public List<ProductCartInfo> getProductCartInfos(List<? extends StockManagement> items) {
 		if (items == null || items.isEmpty()) {
 			return new ArrayList<>();
 		}
@@ -347,7 +345,7 @@ public class ProductServiceV1 {
 		Map<UUID, ProductVariant> variantMap = variantIds.isEmpty()
 			? Map.of()
 			: productVariantRepository.findByIdIn(new ArrayList<>(variantIds)).stream()
-				.collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
+			.collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
 
 		// 3. DTO 변환 및 로직 적용
 		List<ProductCartInfo> result = new ArrayList<>();
@@ -388,7 +386,7 @@ public class ProductServiceV1 {
 			// 옵션 상품 차감
 			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
 				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-			
+
 			variant.decreaseStock(quantity);
 		} else {
 			// 단일 상품 차감
@@ -421,7 +419,7 @@ public class ProductServiceV1 {
 		if (variantId != null) {
 			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
 				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-			
+
 			variant.increaseStock(quantity);
 		} else {
 			Product product = productRepository.findByIdWithLock(productId)
@@ -442,58 +440,6 @@ public class ProductServiceV1 {
 	public void increaseStockBulk(List<StockManagement> items) {
 		for (StockManagement item : items) {
 			increaseStock(item.getProductId(), item.getVariantId(), item.getQuantity());
-		}
-	}
-
-	/**
-	 * 장바구니 담기용 상품 정보 조회
-	 */
-	@Transactional(readOnly = true)
-	public ProductCartInfo getProductCartInfo(UUID productId, UUID variantId) {
-		Product product = productRepository.findById(productId)
-			.orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-
-		if (variantId != null) {
-			ProductVariant variant = productVariantRepository.findById(variantId)
-				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-
-			if (!variant.getProduct().getId().equals(productId)) {
-				throw new CustomException(ErrorCode.VARIANT_NOT_FOUND);
-			}
-
-			boolean isAvailable = product.getStatus() == ProductStatus.ON_SALE
-				&& variant.getStatus() == VariantStatus.ON_SALE;
-
-			return ProductCartInfo.builder()
-				.productId(productId)
-				.variantId(variantId)
-				.productName(product.getTitle())
-				.optionName(variant.getOptionName())
-				.thumbnailUrl(product.getThumbnailUrl())
-				.price(variant.getPrice())
-				.stockQuantity(variant.getStockQuantity())
-				.isAvailable(isAvailable)
-				.build();
-		} else {
-			// 단일 상품인데 옵션이 있는 경우 (잘못된 요청 가능성)
-			// 여기서는 정책상 허용하지 않거나, 대표 가격/재고를 줄 수도 있음.
-			// 우선 단일 상품 로직 그대로 진행
-			if (Boolean.TRUE.equals(product.getHasOptions())) {
-				throw new CustomException(ErrorCode.VARIANT_REQUIRED);
-			}
-
-			boolean isAvailable = product.getStatus() == ProductStatus.ON_SALE;
-
-			return ProductCartInfo.builder()
-				.productId(productId)
-				.variantId(null)
-				.productName(product.getTitle())
-				.optionName(null)
-				.thumbnailUrl(product.getThumbnailUrl())
-				.price(product.getPrice())
-				.stockQuantity(product.getStockQuantity())
-				.isAvailable(isAvailable)
-				.build();
 		}
 	}
 }

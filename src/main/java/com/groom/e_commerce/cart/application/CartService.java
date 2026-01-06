@@ -1,7 +1,13 @@
 package com.groom.e_commerce.cart.application;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 import org.springframework.stereotype.Service;
 
@@ -16,7 +22,7 @@ import com.groom.e_commerce.product.application.dto.ProductCartInfo;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,10 +33,14 @@ public class CartService {
 	private final CartItemRepository cartItemRepository;
 	private final ProductServiceV1 productService;
 
-
 	public void addItemToCart(UUID userId, CartAddRequest request) {
 		// 0. 상품 정보 조회 및 검증
-		ProductCartInfo productInfo = productService.getProductCartInfo(request.getProductId(), request.getVariantId());
+		List<ProductCartInfo> productInfos = productService.getProductCartInfos(List.of(request));
+
+		if (productInfos.isEmpty()) {
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+		}
+		ProductCartInfo productInfo = productInfos.get(0);
 
 		if (!productInfo.isAvailable()) {
 			throw new CustomException(ErrorCode.PRODUCT_NOT_ON_SALE);
@@ -66,6 +76,59 @@ public class CartService {
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public List<CartItemResponse> getMyCart(UUID userId) {
+		Cart cart = cartRepository.findByUserId(userId).orElse(null);
+		if (cart == null) {
+			return List.of();
+		}
+
+		// 1. 내 장바구니의 모든 아이템 ID 리스트 가져오기
+		List<CartItem> cartItems = cartItemRepository.findAllByCart(cart);
+		if (cartItems.isEmpty()) {
+			return List.of();
+		}
+
+		// 2. Product 서비스에 Bulk 조회 요청 (N+1 문제 해결)
+		// CartItem이 StockManagement를 구현하고 있으므로 바로 전달 가능
+		List<ProductCartInfo> productInfos = productService.getProductCartInfos(cartItems);
+
+		// 3. 매핑을 위해 Map으로 변환 (Key: productId + variantId)
+		Map<String, ProductCartInfo> infoMap = productInfos.stream()
+			.collect(Collectors.toMap(
+				info -> generateLookupKey(info.getProductId(), info.getVariantId()),
+				Function.identity()
+			));
+
+		// 4. CartItem과 실시간 Product 정보를 합쳐서 Response 생성
+		return cartItems.stream()
+			.map(item -> {
+				String key = generateLookupKey(item.getProductId(), item.getVariantId());
+				ProductCartInfo info = infoMap.get(key);
+
+				if (info == null) return null; // 상품이 삭제된 경우 등 예외처리
+
+				return CartItemResponse.builder()
+					.cartItemId(item.getId())
+					.productId(item.getProductId())
+					.variantId(item.getVariantId())
+					.productName(info.getProductName())
+					.optionName(info.getOptionName())
+					.thumbnailUrl(info.getThumbnailUrl())
+					.price(info.getPrice())
+					.quantity(item.getQuantity())
+					.totalPrice(info.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+					.stockQuantity(info.getStockQuantity())
+					.isAvailable(info.isAvailable())
+					.build();
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+	}
+
+	private String generateLookupKey(UUID productId, UUID variantId) {
+		return productId.toString() + (variantId != null ? variantId.toString() : "");
+	}
 	private CartItem findExistItem(Cart cart, CartAddRequest request) {
 		if (request.getVariantId() != null) {
 			return cartItemRepository.findByCartAndVariantId(cart, request.getVariantId())
@@ -76,5 +139,49 @@ public class CartService {
 		}
 	}
 
+	public void updateItemQuantity(UUID userId, UUID itemId, int quantity) {
+		CartItem item = cartItemRepository.findById(itemId)
+			.orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
 
+		if (!item.getCart().getUserId().equals(userId)) {
+			throw new CustomException(ErrorCode.ACCESS_DENIED);
+		}
+
+		List<ProductCartInfo> productInfos = productService.getProductCartInfos(List.of(item));
+
+		if (productInfos.isEmpty()) {
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+		}
+		ProductCartInfo info = productInfos.get(0);
+		if (!info.isAvailable()) {
+			throw new CustomException(ErrorCode.PRODUCT_NOT_ON_SALE);
+		}
+		if (info.getStockQuantity() < quantity) {
+			throw new CustomException(ErrorCode.STOCK_NOT_ENOUGH);
+		}
+		item.updateQuantity(quantity);
+	}
+
+	public void deleteCartItem(UUID userId, UUID itemId) {
+		// 1. 삭제할 아이템 조회
+		CartItem item = cartItemRepository.findById(itemId)
+			.orElseThrow(() -> new CustomException(ErrorCode.CART_ITEM_NOT_FOUND));
+
+		// 2. 권한 체크 (남의 장바구니 아이템을 지우면 안 됨)
+		if (!item.getCart().getUserId().equals(userId)) {
+			throw new CustomException(ErrorCode.ACCESS_DENIED);
+		}
+
+		// 3. 삭제
+		cartItemRepository.delete(item);
+	}
+
+	// public void clearCart(UUID userId) {
+	// 	Cart cart = cartRepository.findByUserId(userId)
+	// 		.orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
+	//
+	// 	// CartItemRepository에 deleteAllByCart 메서드가 필요할 수 있음
+	// 	// 또는 cart.getItems().clear() 후 Dirty Checking 활용 (Cascade 설정 필요)
+	// 	cartItemRepository.deleteAll(cart.getItems());
+	// }
 }
