@@ -14,15 +14,15 @@ import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.global.util.SecurityUtil;
 import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
-import com.groom.e_commerce.user.domain.entity.seller.SellerEntity;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerEntity;
 import com.groom.e_commerce.user.domain.entity.user.PeriodType;
 import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 import com.groom.e_commerce.user.domain.entity.user.UserRole;
 import com.groom.e_commerce.user.domain.repository.AddressRepository;
-import com.groom.e_commerce.user.domain.repository.SellerRepository;
+import com.groom.e_commerce.user.domain.repository.OwnerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
 import com.groom.e_commerce.user.presentation.dto.request.user.ReqUpdateUserDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.seller.ResSalesStatDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.owner.ResSalesStatDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
 
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class UserServiceV1 {
 	private final UserRepository userRepository;
 	private final AddressRepository addressRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final SellerRepository sellerRepository;
+	private final OwnerRepository ownerRepository;
 
 	public ResUserDtoV1 getMe() {
 		UUID userId = SecurityUtil.getCurrentUserId();
@@ -49,14 +49,14 @@ public class UserServiceV1 {
 			.findByUserUserIdAndIsDefaultTrue(userId)
 			.orElse(null);
 
-		SellerEntity seller = null;
-		if (user.getRole() == UserRole.SELLER) {
-			seller = sellerRepository.findByUserUserIdAndDeletedAtIsNull(userId)
+		OwnerEntity owner = null;
+		if (user.getRole() == UserRole.OWNER) {
+			owner = ownerRepository.findByUserUserIdAndDeletedAtIsNull(userId)
 				.orElse(null);
 
 		}
 
-		return ResUserDtoV1.from(user, defaultAddress, seller);
+		return ResUserDtoV1.from(user, defaultAddress, owner);
 	}
 
 	@Transactional
@@ -97,7 +97,7 @@ public class UserServiceV1 {
 		UUID userId = SecurityUtil.getCurrentUserId();
 		UserEntity user = findUserById(userId);
 
-		if (user.getRole() != UserRole.SELLER) {
+		if (user.getRole() != UserRole.OWNER) {
 			throw new CustomException(ErrorCode.FORBIDDEN);
 		}
 
