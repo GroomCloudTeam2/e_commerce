@@ -35,14 +35,11 @@ src
    │              │  ├─ entity
    │              │  │  ├─ Payment.java            # 주문 1건에 대한 결제 엔티티 (READY/PAID/CANCELED)
    │              │  │  └─ PaymentCancel.java      # 결제 취소 이력 엔티티 (부분/전체 취소)
-   │              │  │  └─ PaymentSplit.java       # 주문상품 단위 결제 분할 엔티티(정산/부분취소 기준 라인)
    │              │  ├─ model
    │              │  │  ├─ PaymentMethod.java      # 결제 수단 Enum
-   │              │  │  ├─ PaymentSplitStatus.java # 결제 분할(PaymentSplit) 상태 Enum (ACTIVE/CANCELED 등)
    │              │  │  └─ PaymentStatus.java      # 결제 상태 Enum
    │              │  └─ repository
    │              │     └─ PaymentRepository.java        # 결제 도메인 Repository 인터페이스
-   │              │     └─ PaymentSplitRepository.java   # 결제 분할(PaymentSplit) Repository 인터페이스
    │              │
    │              ├─ infrastructure                # 외부 시스템 연동 및 구현 영역
    │              │  ├─ adapter.in
@@ -67,8 +64,6 @@ src
    │              │  │
    │              │  ├─ repository
    │              │  │  └─ PaymentRepositoryImpl.java        # PaymentRepository 구현체(EntityManager/JPA)
-   │              │  │  └─ PaymentSplitJpaRepository.java    # PaymentSplit 조회용 Spring Data JPA 레포지토리(락 조회 포함)
-   │              │  │  └─ PaymentSplitRepositoryImpl.java   # PaymentSplitRepository 구현체(EntityManager 기반, 락 조회 지원)
    │              │  └─ stub
    │              │     └─ StubOrderQueryAdapter.java        # 주문 도메인 미구현 시 주문조회(OrderQueryPort) 테스트용 스텁
    │              │
@@ -92,12 +87,10 @@ src
    │              │
    │              └─ presentation                 # 외부 요청 처리(API 계층)
    │                 ├─ controller
-   │                 │  ├─ PaymentCancelItemControllerV1.java  # 주문상품 단위 부분취소 API 컨트롤러
    │                 │  ├─ PaymentControllerV1.java            # 결제 REST API 컨트롤러(ready/confirm/cancel 등)
    │                 │  └─ PaymentRedirectController.java      # 토스 결제 결과 리다이렉트 처리(성공/실패 URL)
    │                 ├─ dto
    │                 │  ├─ request
-   │                 │  │  ├─ ReqCancelOrderItemPaymentV1.java  # 주문상품 단위 부분취소 요청 DTO
    │                 │  │  ├─ ReqConfirmPaymentV1.java          # 결제 승인 요청 DTO
    │                 │  │  ├─ ReqCancelPaymentV1.java           # 결제 취소 요청 DTO
    │                 │  │  └─ ReqReadyPaymentV1.java            # 결제 준비 요청 DTO
