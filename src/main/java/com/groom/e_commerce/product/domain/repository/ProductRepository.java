@@ -83,8 +83,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 	@Query("SELECT p FROM Product p WHERE p.title LIKE %:keyword% AND p.status = 'ON_SALE' AND p.deletedAt IS NULL")
 	Page<Product> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
 
-	// 장바구니/주문 시 여러 상품 정보를 한 번에 조회할 때 사용
-	List<Product> findByIdIn(List<UUID> ids);
+	// 장바구니/주문 시 여러 상품 정보를 한 번에 조회할 때 사용 (삭제되지 않은 상품만)
+	@Query("SELECT p FROM Product p WHERE p.id IN :ids AND p.deletedAt IS NULL")
+	List<Product> findByIdInAndNotDeleted(@Param("ids") List<UUID> ids);
 
 	Optional<String> findTitleById(UUID id);
 
