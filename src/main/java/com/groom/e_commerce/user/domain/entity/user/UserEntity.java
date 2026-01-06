@@ -64,8 +64,7 @@ public class UserEntity extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", length = 20, nullable = false)
-	@Builder.Default
-	private UserStatus status = UserStatus.ACTIVE;
+	private UserStatus status;
 
 	// =========================
 	// Relation

@@ -13,14 +13,12 @@ import com.groom.e_commerce.user.domain.entity.seller.SellerStatus;
 
 @Repository
 public interface SellerRepository extends JpaRepository<SellerEntity, UUID> {
-
-	Optional<SellerEntity> findByUserUserId(UUID userId);
-
-	boolean existsByUserUserId(UUID userId);
+	Optional<SellerEntity> findByUserUserIdAndDeletedAtIsNull(UUID userId);
 
 	// 승인 상태별 조회
 	Page<SellerEntity> findBySellerStatusAndDeletedAtIsNull(SellerStatus sellerStatus, Pageable pageable);
 
 	// sellerId로 조회 (삭제되지 않은 것)
 	Optional<SellerEntity> findBySellerIdAndDeletedAtIsNull(UUID sellerId);
+
 }

@@ -20,8 +20,8 @@ import com.groom.e_commerce.user.application.service.AdminServiceV1;
 import com.groom.e_commerce.user.domain.entity.seller.SellerStatus;
 import com.groom.e_commerce.user.presentation.dto.request.admin.ReqCreateManagerDtoV1;
 import com.groom.e_commerce.user.presentation.dto.request.seller.ReqRejectSellerDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.admin.ResSellerApprovalListDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalListDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserListDtoV1;
 

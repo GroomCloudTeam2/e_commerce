@@ -18,8 +18,8 @@ import com.groom.e_commerce.user.domain.entity.user.UserStatus;
 import com.groom.e_commerce.user.domain.repository.SellerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
 import com.groom.e_commerce.user.presentation.dto.request.admin.ReqCreateManagerDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.admin.ResSellerApprovalListDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalListDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserListDtoV1;
 
@@ -34,7 +34,7 @@ public class AdminServiceV1 {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private SellerRepository sellerRepository;
+	private final SellerRepository sellerRepository;
 
 	// ==================== Manager 기능 ====================
 

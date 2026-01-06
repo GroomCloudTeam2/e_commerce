@@ -1,10 +1,12 @@
 package com.groom.e_commerce.user.presentation.dto.request.user;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ReqUpdateUserDtoV1 {
 
 	private String nickname;

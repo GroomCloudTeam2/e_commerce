@@ -19,7 +19,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -85,8 +84,7 @@ public class SellerEntity extends BaseEntity {
 	// =========================
 	@Enumerated(EnumType.STRING)
 	@Column(name = "seller_status", length = 20, nullable = false)
-	@Builder.Default
-	private SellerStatus sellerStatus = SellerStatus.PENDING;
+	private SellerStatus sellerStatus;
 
 	@Column(name = "approved_at")
 	private LocalDateTime approvedAt;

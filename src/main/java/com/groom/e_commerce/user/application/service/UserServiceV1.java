@@ -14,10 +14,12 @@ import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.global.util.SecurityUtil;
 import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
+import com.groom.e_commerce.user.domain.entity.seller.SellerEntity;
 import com.groom.e_commerce.user.domain.entity.user.PeriodType;
 import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 import com.groom.e_commerce.user.domain.entity.user.UserRole;
 import com.groom.e_commerce.user.domain.repository.AddressRepository;
+import com.groom.e_commerce.user.domain.repository.SellerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
 import com.groom.e_commerce.user.presentation.dto.request.user.ReqUpdateUserDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.seller.ResSalesStatDtoV1;
@@ -35,6 +37,7 @@ public class UserServiceV1 {
 	private final UserRepository userRepository;
 	private final AddressRepository addressRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final SellerRepository sellerRepository;
 
 	public ResUserDtoV1 getMe() {
 		UUID userId = SecurityUtil.getCurrentUserId();
@@ -46,7 +49,14 @@ public class UserServiceV1 {
 			.findByUserUserIdAndIsDefaultTrue(userId)
 			.orElse(null);
 
-		return ResUserDtoV1.from(user, defaultAddress);
+		SellerEntity seller = null;
+		if (user.getRole() == UserRole.SELLER) {
+			seller = sellerRepository.findByUserUserIdAndDeletedAtIsNull(userId)
+				.orElse(null);
+
+		}
+
+		return ResUserDtoV1.from(user, defaultAddress, seller);
 	}
 
 	@Transactional

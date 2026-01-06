@@ -1,8 +1,10 @@
-package com.groom.e_commerce.user.presentation.dto.response.seller;
+package com.groom.e_commerce.user.presentation.dto.response.admin;
 
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+
+import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalDtoV1;
 
 import lombok.Builder;
 import lombok.Getter;

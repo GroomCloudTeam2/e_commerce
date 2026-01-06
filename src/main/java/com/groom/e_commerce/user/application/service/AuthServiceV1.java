@@ -39,7 +39,7 @@ public class AuthServiceV1 {
 	public void signup(ReqSignupDtoV1 request) {
 		// USER, OWNER만 회원가입 가능 (MANAGER는 MASTER가 생성)
 		if (request.getRole() != UserRole.USER && request.getRole() != UserRole.SELLER) {
-			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 OWNER만 회원가입할 수 있습니다.");
+			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 SELLER만 회원가입할 수 있습니다.");
 		}
 
 		// 탈퇴 유저 복구 처리
@@ -67,7 +67,7 @@ public class AuthServiceV1 {
 			validateOwnerFields(request);
 			UserEntity user = createAndSaveUser(request);
 			createAndSaveSeller(user, request);
-			log.info("Owner signed up with store: {}", request.getStore());
+			log.info("SELLER signed up with store: {}", request.getStore());
 		} else {
 			createAndSaveUser(request);
 			log.info("User signed up: {}", request.getEmail());
@@ -98,6 +98,7 @@ public class AuthServiceV1 {
 			.approvalRequest(request.getApprovalRequest())
 			.sellerStatus(SellerStatus.PENDING)
 			.build();
+
 		sellerRepository.save(seller);
 	}
 
