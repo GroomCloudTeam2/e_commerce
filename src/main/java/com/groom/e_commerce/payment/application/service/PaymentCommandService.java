@@ -124,8 +124,6 @@ public class PaymentCommandService implements
 	 * ✅ 결제 승인(confirm)
 	 * - 토스 승인 성공 후 Payment 상태 변경
 	 * - 주문 상태 변경(PENDING -> PAID)
-	 *
-	 * (B안) split 생성/저장 안 함
 	 */
 	@Override
 	public ResPaymentV1 confirm(ReqConfirmPaymentV1 request) {
@@ -174,9 +172,8 @@ public class PaymentCommandService implements
 	}
 
 	/**
-	 * ✅ B안: 주문 도메인에서 {orderId, cancelAmount, orderItemIds}로 요청하는 "총액 취소"
+	 * ✅ 주문 도메인에서 {orderId, cancelAmount, orderItemIds}로 요청하는 "총액 취소"
 	 * - PG(토스) 취소는 cancelAmount로 1회 호출
-	 * - split 배분/반영 없음 (orderItemIds는 주문 도메인 추적용/검증용)
 	 */
 	@Override
 	public ResCancelResultV1 cancelByOrder(UUID orderId, Long cancelAmount, List<UUID> orderItemIds) {
@@ -194,8 +191,11 @@ public class PaymentCommandService implements
 		Payment payment = paymentRepository.findByOrderId(orderId)
 			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 정보를 찾을 수 없습니다."));
 
-		// ✅ 멱등: 이미 전액 취소면 성공 응답
+		// ✅ 멱등: 이미 전액 취소면 성공 응답 (+ 주문에도 멱등 통지)
 		if (payment.isAlreadyCancelled()) {
+			// ✅ 주문 도메인에도 "이미 취소 상태"를 동기화(멱등)
+			orderStatePort.cancelOrderByPayment(orderId, 0L, payment.getCanceledAmount(), payment.getStatus().name(), orderItemIds);
+
 			return ResCancelResultV1.of(
 				payment.getPaymentKey(),
 				payment.getStatus().name(),
@@ -216,7 +216,6 @@ public class PaymentCommandService implements
 				new TossCancelRequest("ORDER_CANCEL", cancelAmount)
 			);
 		} catch (TossApiException e) {
-			// 필요하면 여기서 토스 멱등 에러 처리(ALREADY_CANCELED_PAYMENT 등) 추가 가능
 			throw e;
 		}
 
@@ -231,6 +230,12 @@ public class PaymentCommandService implements
 		payment.addCancel(cancel);
 
 		Payment saved = paymentRepository.save(payment);
+
+		// ✅ 취소 완료를 주문 도메인에 통지
+		// - 이번에 취소한 금액(cancelAmount)
+		// - 누적 취소 금액(saved.getCanceledAmount())
+		// - 결제 상태(saved.getStatus())
+		orderStatePort.cancelOrderByPayment(orderId, cancelAmount, saved.getCanceledAmount(), saved.getStatus().name(), orderItemIds);
 
 		return ResCancelResultV1.of(
 			saved.getPaymentKey(),
@@ -247,8 +252,12 @@ public class PaymentCommandService implements
 		Payment payment = paymentRepository.findByPaymentKey(paymentKey)
 			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 정보를 찾을 수 없습니다."));
 
-		// 멱등: 이미 전액 취소면 성공 응답
+		UUID orderId = payment.getOrderId();
+
+		// 멱등: 이미 전액 취소면 성공 응답 (+ 주문에도 멱등 통지)
 		if (payment.isAlreadyCancelled()) {
+			orderStatePort.cancelOrderByPayment(orderId, 0L, payment.getCanceledAmount(), payment.getStatus().name(), List.of());
+
 			return ResCancelResultV1.of(
 				payment.getPaymentKey(),
 				payment.getStatus().name(),
@@ -290,6 +299,9 @@ public class PaymentCommandService implements
 					paymentRepository.save(payment);
 				}
 
+				// ✅ DB 보정 후 주문 도메인에도 통지
+				orderStatePort.cancelOrderByPayment(orderId, cancelAmount, payment.getCanceledAmount(), payment.getStatus().name(), List.of());
+
 				return ResCancelResultV1.of(
 					payment.getPaymentKey(),
 					payment.getStatus().name(),
@@ -311,6 +323,9 @@ public class PaymentCommandService implements
 		payment.addCancel(cancel);
 
 		Payment saved = paymentRepository.save(payment);
+
+		// ✅ 취소 완료를 주문 도메인에 통지
+		orderStatePort.cancelOrderByPayment(orderId, cancelAmount, saved.getCanceledAmount(), saved.getStatus().name(), List.of());
 
 		return ResCancelResultV1.of(
 			saved.getPaymentKey(),
