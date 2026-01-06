@@ -39,19 +39,15 @@ public class PaymentCancel {
 	@Column(name = "cancel_amount", nullable = false)
 	private Long cancelAmount;
 
-	@Column(name = "cancel_reason", nullable = false, length = 255)
-	private String cancelReason;
-
 	@Column(name = "canceled_at", nullable = false)
 	private OffsetDateTime canceledAt;
 
 	protected PaymentCancel() {
 	}
 
-	public PaymentCancel(String paymentKey, Long cancelAmount, String cancelReason, OffsetDateTime canceledAt) {
+	public PaymentCancel(String paymentKey, Long cancelAmount, OffsetDateTime canceledAt) {
 		this.paymentKey = paymentKey;
 		this.cancelAmount = cancelAmount;
-		this.cancelReason = cancelReason;
 		this.canceledAt = canceledAt;
 	}
 
@@ -75,10 +71,6 @@ public class PaymentCancel {
 
 	public Long getCancelAmount() {
 		return cancelAmount;
-	}
-
-	public String getCancelReason() {
-		return cancelReason;
 	}
 
 	public OffsetDateTime getCanceledAt() {
