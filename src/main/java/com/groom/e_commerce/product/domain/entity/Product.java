@@ -10,6 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.product.domain.enums.ProductStatus;
 
 import jakarta.persistence.CascadeType;
@@ -182,11 +184,21 @@ public class Product extends BaseEntity {
 	// 옵션이 없는 상품의 재고 감소 로직
 	public void decreaseStock(int quantity) {
 		if (this.stockQuantity == null || this.stockQuantity < quantity) {
-			throw new IllegalStateException("재고가 부족합니다.");
+			throw new CustomException(ErrorCode.STOCK_NOT_ENOUGH);
 		}
 		this.stockQuantity -= quantity;
 		if (this.stockQuantity == 0) {
 			this.status = ProductStatus.SOLD_OUT;
+		}
+	}
+
+	public void increaseStock(int quantity) {
+		if (this.stockQuantity == null) {
+			this.stockQuantity = 0;
+		}
+		this.stockQuantity += quantity;
+		if (this.status == ProductStatus.SOLD_OUT && this.stockQuantity > 0) {
+			this.status = ProductStatus.ON_SALE;
 		}
 	}
 

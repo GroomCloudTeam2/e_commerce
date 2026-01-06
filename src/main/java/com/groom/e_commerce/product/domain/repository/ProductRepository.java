@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,8 +16,15 @@ import org.springframework.stereotype.Repository;
 import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.enums.ProductStatus;
 
+import jakarta.persistence.LockModeType;
+
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+
+	// 재고 차감을 위한 비관적 락 조회
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT p FROM Product p WHERE p.id = :id")
+	Optional<Product> findByIdWithLock(@Param("id") UUID id);
 
 	// 상품 목록 조회 (메인 페이지용)
 	@Query("SELECT p FROM Product p WHERE p.status = 'ON_SALE' AND p.deletedAt IS NULL")
