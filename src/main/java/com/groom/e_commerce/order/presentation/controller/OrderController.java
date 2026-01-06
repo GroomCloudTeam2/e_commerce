@@ -52,4 +52,18 @@ public class OrderController {
 		orderService.cancelOrder(orderId);
 		return ResponseEntity.ok("주문이 성공적으로 취소되었습니다.");
 	}
+	@Operation(summary = "구매 확정", description = "배송이 완료된 주문을 구매 확정 처리합니다.")
+	@PostMapping("/{orderId}/confirm")
+	public ResponseEntity<String> confirmOrder(
+		@PathVariable UUID orderId,
+		@AuthenticationPrincipal CustomUserDetails userDetails
+	) {
+		// 1. JWT에서 사용자 ID 추출
+		UUID currentUserId = userDetails.getUserId();
+
+		// 2. 서비스 호출
+		orderService.confirmOrder(orderId, currentUserId);
+
+		return ResponseEntity.ok("구매가 정상적으로 확정되었습니다.");
+	}
 }
