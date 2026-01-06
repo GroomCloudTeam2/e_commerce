@@ -3,13 +3,12 @@ package com.groom.e_commerce.payment.application.service;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groom.e_commerce.payment.application.port.in.CancelOrderItemPaymentUseCase;
+import com.groom.e_commerce.payment.application.port.in.CancelPaymentByOrderUseCase;
 import com.groom.e_commerce.payment.application.port.in.CancelPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ConfirmPaymentUseCase;
 import com.groom.e_commerce.payment.application.port.in.ReadyPaymentUseCase;
@@ -18,10 +17,8 @@ import com.groom.e_commerce.payment.application.port.out.OrderStatePort;
 import com.groom.e_commerce.payment.application.port.out.TossPaymentPort;
 import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.entity.PaymentCancel;
-import com.groom.e_commerce.payment.domain.entity.PaymentSplit;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
-import com.groom.e_commerce.payment.domain.repository.PaymentSplitRepository;
 import com.groom.e_commerce.payment.infrastructure.api.toss.config.TossPaymentsProperties;
 import com.groom.e_commerce.payment.infrastructure.api.toss.dto.request.TossCancelRequest;
 import com.groom.e_commerce.payment.infrastructure.api.toss.dto.request.TossConfirmRequest;
@@ -42,12 +39,9 @@ public class PaymentCommandService implements
 	ConfirmPaymentUseCase,
 	CancelPaymentUseCase,
 	ReadyPaymentUseCase,
-	CancelOrderItemPaymentUseCase {
-
-	private static final String PG_PROVIDER_TOSS = "toss";
+	CancelPaymentByOrderUseCase {
 
 	private final PaymentRepository paymentRepository;
-	private final PaymentSplitRepository paymentSplitRepository;
 
 	private final TossPaymentPort tossPaymentPort;
 	private final TossPaymentsProperties tossPaymentsProperties;
@@ -57,14 +51,12 @@ public class PaymentCommandService implements
 
 	public PaymentCommandService(
 		PaymentRepository paymentRepository,
-		PaymentSplitRepository paymentSplitRepository,
 		TossPaymentPort tossPaymentPort,
 		TossPaymentsProperties tossPaymentsProperties,
 		OrderQueryPort orderQueryPort,
 		OrderStatePort orderStatePort
 	) {
 		this.paymentRepository = paymentRepository;
-		this.paymentSplitRepository = paymentSplitRepository;
 		this.tossPaymentPort = tossPaymentPort;
 		this.tossPaymentsProperties = tossPaymentsProperties;
 		this.orderQueryPort = orderQueryPort;
@@ -81,11 +73,7 @@ public class PaymentCommandService implements
 		Long requestAmount = request.amount();
 
 		if (requestAmount == null) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"AMOUNT_REQUIRED",
-				"결제 금액이 필요합니다."
-			);
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "AMOUNT_REQUIRED", "결제 금액이 필요합니다.");
 		}
 
 		// 1) 주문 요약 조회
@@ -95,47 +83,27 @@ public class PaymentCommandService implements
 		} catch (PaymentException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new PaymentException(
-				HttpStatus.NOT_FOUND,
-				"ORDER_NOT_FOUND",
-				"주문 정보를 찾을 수 없습니다."
-			);
+			throw new PaymentException(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND", "주문 정보를 찾을 수 없습니다.");
 		}
 
 		// 2) 금액 검증
 		long orderTotal = order.totalPaymentAmt();
 		if (orderTotal != requestAmount.longValue()) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"INVALID_AMOUNT",
-				"주문 금액과 결제 요청 금액이 일치하지 않습니다."
-			);
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "INVALID_AMOUNT", "주문 금액과 결제 요청 금액이 일치하지 않습니다.");
 		}
 
 		// 3) 결제 레코드 확인
 		Payment payment = paymentRepository.findByOrderId(orderId)
-			.orElseThrow(() -> new PaymentException(
-				HttpStatus.NOT_FOUND,
-				"PAYMENT_NOT_FOUND",
-				"결제 준비 정보를 찾을 수 없습니다."
-			));
+			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 준비 정보를 찾을 수 없습니다."));
 
 		// 4) READY 상태 확인
 		if (payment.getStatus() != PaymentStatus.READY) {
-			throw new PaymentException(
-				HttpStatus.CONFLICT,
-				"PAYMENT_NOT_READY",
-				"결제 준비 상태가 아닙니다."
-			);
+			throw new PaymentException(HttpStatus.CONFLICT, "PAYMENT_NOT_READY", "결제 준비 상태가 아닙니다.");
 		}
 
 		// 5) 내부 결제 금액 2차 검증
 		if (payment.getAmount() == null || !payment.getAmount().equals(requestAmount)) {
-			throw new PaymentException(
-				HttpStatus.CONFLICT,
-				"PAYMENT_AMOUNT_MISMATCH",
-				"결제 준비 금액이 주문 금액과 일치하지 않습니다."
-			);
+			throw new PaymentException(HttpStatus.CONFLICT, "PAYMENT_AMOUNT_MISMATCH", "결제 준비 금액이 주문 금액과 일치하지 않습니다.");
 		}
 
 		String orderName = "주문 " + order.orderNumber();
@@ -155,8 +123,9 @@ public class PaymentCommandService implements
 	/**
 	 * ✅ 결제 승인(confirm)
 	 * - 토스 승인 성공 후 Payment 상태 변경
-	 * - ✅ 주문상품 목록 조회 후 PaymentSplit 생성/저장
-	 * - 주문 상태 변경 (PENDING -> PAID)
+	 * - 주문 상태 변경(PENDING -> PAID)
+	 *
+	 * (B안) split 생성/저장 안 함
 	 */
 	@Override
 	public ResPaymentV1 confirm(ReqConfirmPaymentV1 request) {
@@ -164,39 +133,23 @@ public class PaymentCommandService implements
 		Long requestAmount = request.amount();
 
 		if (requestAmount == null) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"AMOUNT_REQUIRED",
-				"결제 금액이 필요합니다."
-			);
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "AMOUNT_REQUIRED", "결제 금액이 필요합니다.");
 		}
 
 		Payment payment = paymentRepository.findByOrderId(orderId)
-			.orElseThrow(() -> new PaymentException(
-				HttpStatus.NOT_FOUND,
-				"PAYMENT_NOT_FOUND",
-				"결제 정보를 찾을 수 없습니다."
-			));
+			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 정보를 찾을 수 없습니다."));
 
 		// 멱등 처리
 		if (payment.isAlreadyPaid()) {
 			return ResPaymentV1.from(payment);
 		}
 		if (payment.isAlreadyCancelled()) {
-			throw new PaymentException(
-				HttpStatus.CONFLICT,
-				"ALREADY_CANCELLED",
-				"이미 취소된 결제입니다."
-			);
+			throw new PaymentException(HttpStatus.CONFLICT, "ALREADY_CANCELLED", "이미 취소된 결제입니다.");
 		}
 
 		// 금액 검증
 		if (payment.getAmount() == null || !payment.getAmount().equals(requestAmount)) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"INVALID_AMOUNT",
-				"결제 요청 금액이 서버 금액과 일치하지 않습니다."
-			);
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "INVALID_AMOUNT", "결제 요청 금액이 서버 금액과 일치하지 않습니다.");
 		}
 
 		// 토스 승인 호출
@@ -206,140 +159,95 @@ public class PaymentCommandService implements
 
 		// 토스 응답 금액 검증(선택)
 		if (toss.totalAmount() != null && !toss.totalAmount().equals(requestAmount)) {
-			throw new PaymentException(
-				HttpStatus.BAD_GATEWAY,
-				"PAYMENT_CONFIRM_AMOUNT_MISMATCH",
-				"PG 승인 금액이 요청 금액과 일치하지 않습니다."
-			);
+			throw new PaymentException(HttpStatus.BAD_GATEWAY, "PAYMENT_CONFIRM_AMOUNT_MISMATCH", "PG 승인 금액이 요청 금액과 일치하지 않습니다.");
 		}
 
-		// ✅ 결제 상태 반영
+		// 결제 상태 반영
 		payment.markPaid(toss.paymentKey(), toss.approvedAt());
-
-		// ✅ PaymentSplit 생성/저장 (주문상품 기준)
-		createPaymentSplitsIfNeeded(payment, orderId);
 
 		Payment saved = paymentRepository.save(payment);
 
-		// ✅ Order 상태 변경 (PENDING -> PAID)
+		// 주문 상태 변경
 		orderStatePort.payOrder(orderId);
 
 		return ResPaymentV1.from(saved);
 	}
 
 	/**
-	 * ✅ (신규) 아이템 단위 부분취소
-	 * - Order -> Payment: {orderId, orderItemId, cancelAmount} 로 호출
-	 * - PaymentSplit(orderItemId) 조회/검증 -> 토스 부분취소 -> payment/payment_cancel/split 반영
-	 *
-	 * ⚠️ 전제:
-	 * - PaymentSplitRepository에 findByOrderItemIdWithLock(UUID) 가 존재해야 함
-	 * - PaymentSplit 엔티티에 addCancel(long) 이 구현되어 있어야 함
+	 * ✅ B안: 주문 도메인에서 {orderId, cancelAmount, orderItemIds}로 요청하는 "총액 취소"
+	 * - PG(토스) 취소는 cancelAmount로 1회 호출
+	 * - split 배분/반영 없음 (orderItemIds는 주문 도메인 추적용/검증용)
 	 */
 	@Override
-	public ResCancelResultV1 cancelOrderItem(UUID orderId, UUID orderItemId, long cancelAmount) {
+	public ResCancelResultV1 cancelByOrder(UUID orderId, Long cancelAmount, List<UUID> orderItemIds) {
 
-		if (cancelAmount <= 0) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"INVALID_CANCEL_AMOUNT",
-				"취소 금액이 올바르지 않습니다."
+		if (orderId == null) {
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "ORDER_ID_REQUIRED", "orderId가 필요합니다.");
+		}
+		if (cancelAmount == null || cancelAmount <= 0) {
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "INVALID_CANCEL_AMOUNT", "취소 금액이 올바르지 않습니다.");
+		}
+		if (orderItemIds == null || orderItemIds.isEmpty()) {
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "ORDER_ITEM_IDS_REQUIRED", "취소 대상 주문상품 목록이 필요합니다.");
+		}
+
+		Payment payment = paymentRepository.findByOrderId(orderId)
+			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 정보를 찾을 수 없습니다."));
+
+		// ✅ 멱등: 이미 전액 취소면 성공 응답
+		if (payment.isAlreadyCancelled()) {
+			return ResCancelResultV1.of(
+				payment.getPaymentKey(),
+				payment.getStatus().name(),
+				payment.getCanceledAmount()
 			);
 		}
 
-		// 1) split 조회 (락 권장: 동시 취소 방지)
-		PaymentSplit split = paymentSplitRepository.findByOrderItemIdWithLock(orderItemId)
-			.orElseThrow(() -> new PaymentException(
-				HttpStatus.NOT_FOUND,
-				"SPLIT_NOT_FOUND",
-				"취소 대상 결제 라인(split)을 찾을 수 없습니다."
-			));
-
-		// 2) 요청 orderId 검증
-		if (!split.getOrderId().equals(orderId)) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"ORDER_MISMATCH",
-				"주문 정보가 일치하지 않습니다."
-			);
+		long remaining = payment.getAmount() - payment.getCanceledAmount();
+		if (cancelAmount > remaining) {
+			throw new PaymentException(HttpStatus.BAD_REQUEST, "EXCEED_CANCEL_AMOUNT", "결제 취소 가능 금액을 초과했습니다.");
 		}
 
-		// 3) split 기준 취소 가능 금액 검증
-		long splitRemaining = split.getItemAmount() - split.getCanceledAmount();
-		if (cancelAmount > splitRemaining) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"EXCEED_SPLIT_CANCEL_AMOUNT",
-				"아이템 취소 가능 금액을 초과했습니다."
-			);
-		}
-
-		Payment payment = split.getPayment();
-
-		// 4) payment 기준 취소 가능 금액 검증(2중 안전장치)
-		long paymentRemaining = payment.getAmount() - payment.getCanceledAmount();
-		if (cancelAmount > paymentRemaining) {
-			throw new PaymentException(
-				HttpStatus.BAD_REQUEST,
-				"EXCEED_PAYMENT_CANCEL_AMOUNT",
-				"결제 취소 가능 금액을 초과했습니다."
-			);
-		}
-
-		// 5) 토스 부분취소 호출(금액 기반)
+		// ✅ 토스 취소 1회
 		TossCancelResponse tossCancel;
 		try {
 			tossCancel = tossPaymentPort.cancel(
 				payment.getPaymentKey(),
-				new TossCancelRequest("부분취소", cancelAmount)
+				new TossCancelRequest("ORDER_CANCEL", cancelAmount)
 			);
 		} catch (TossApiException e) {
-			// 토스가 "이미 취소됨" 같은 멱등 에러를 주는 케이스가 있으면 여기서 처리 가능
+			// 필요하면 여기서 토스 멱등 에러 처리(ALREADY_CANCELED_PAYMENT 등) 추가 가능
 			throw e;
 		}
 
-		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null)
-			? tossCancel.canceledAt()
-			: OffsetDateTime.now();
+		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null) ? tossCancel.canceledAt() : OffsetDateTime.now();
 
-		// 6) payment_cancel 기록 + 누적 반영
+		// ✅ payment_cancel 1건 기록 + 누적 반영
 		PaymentCancel cancel = new PaymentCancel(
 			tossCancel.paymentKey(),
 			cancelAmount,
-			"부분취소",
 			canceledAt
 		);
-
-		// payment 누적/상태 반영
 		payment.addCancel(cancel);
 
-		// split 누적/상태 반영
-		split.addCancel(cancelAmount);
-
-		// 저장 (split은 별 repo라 명시적으로 저장)
-		paymentRepository.save(payment);
-		paymentSplitRepository.save(split);
+		Payment saved = paymentRepository.save(payment);
 
 		return ResCancelResultV1.of(
-			payment.getPaymentKey(),
-			payment.getStatus().name(),
-			payment.getCanceledAmount()
+			saved.getPaymentKey(),
+			saved.getStatus().name(),
+			saved.getCanceledAmount()
 		);
 	}
 
 	/**
-	 * ✅ 결제 취소(cancel)
+	 * ✅ 결제 취소(cancel) (paymentKey 기반 API)
 	 */
 	@Override
 	public ResCancelResultV1 cancel(String paymentKey, ReqCancelPaymentV1 request) {
 		Payment payment = paymentRepository.findByPaymentKey(paymentKey)
-			.orElseThrow(() -> new PaymentException(
-				HttpStatus.NOT_FOUND,
-				"PAYMENT_NOT_FOUND",
-				"결제 정보를 찾을 수 없습니다."
-			));
+			.orElseThrow(() -> new PaymentException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 정보를 찾을 수 없습니다."));
 
-		// ✅ 멱등: 이미 전액 취소면 성공 응답
+		// 멱등: 이미 전액 취소면 성공 응답
 		if (payment.isAlreadyCancelled()) {
 			return ResCancelResultV1.of(
 				payment.getPaymentKey(),
@@ -365,7 +273,6 @@ public class PaymentCommandService implements
 				new TossCancelRequest(request.cancelReason(), cancelAmount)
 			);
 		} catch (TossApiException e) {
-
 			// ✅ 토스: 이미 취소됨 -> 성공처럼 처리 + DB 보정
 			if ("ALREADY_CANCELED_PAYMENT".equals(e.getTossErrorCode())) {
 
@@ -376,7 +283,6 @@ public class PaymentCommandService implements
 					PaymentCancel cancel = new PaymentCancel(
 						paymentKey,
 						remainingNow,
-						"(IDEMPOTENT) already canceled in PG",
 						canceledAt
 					);
 
@@ -394,14 +300,11 @@ public class PaymentCommandService implements
 			throw e;
 		}
 
-		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null)
-			? tossCancel.canceledAt()
-			: OffsetDateTime.now();
+		OffsetDateTime canceledAt = (tossCancel.canceledAt() != null) ? tossCancel.canceledAt() : OffsetDateTime.now();
 
 		PaymentCancel cancel = new PaymentCancel(
 			tossCancel.paymentKey(),
 			cancelAmount,
-			request.cancelReason(),
 			canceledAt
 		);
 
@@ -414,35 +317,5 @@ public class PaymentCommandService implements
 			saved.getStatus().name(),
 			saved.getCanceledAmount()
 		);
-	}
-
-	/**
-	 * 결제 승인 성공 후 주문상품 목록을 조회하여 PaymentSplit을 생성한다.
-	 * - UNIQUE(order_item_id) 제약이 있는 경우, 이미 존재하면 생성 스킵(멱등)
-	 */
-	private void createPaymentSplitsIfNeeded(Payment payment, UUID orderId) {
-		List<OrderQueryPort.OrderItemSnapshot> items = orderQueryPort.getOrderItems(orderId);
-		if (items == null || items.isEmpty()) {
-			throw new PaymentException(
-				HttpStatus.BAD_GATEWAY,
-				"ORDER_ITEMS_EMPTY",
-				"주문상품 정보를 조회할 수 없습니다."
-			);
-		}
-
-		List<PaymentSplit> splits = items.stream()
-			.filter(i -> !paymentSplitRepository.existsByOrderItemId(i.orderItemId()))
-			.map(i -> PaymentSplit.of(
-				payment,
-				orderId,
-				i.orderItemId(),
-				i.ownerId(),
-				i.subtotal()
-			))
-			.collect(Collectors.toList());
-
-		if (!splits.isEmpty()) {
-			paymentSplitRepository.saveAll(splits);
-		}
 	}
 }
