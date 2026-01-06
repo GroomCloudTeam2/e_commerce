@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 @lombok.experimental.SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)

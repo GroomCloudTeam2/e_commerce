@@ -27,6 +27,8 @@ import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -190,6 +192,22 @@ public class OrderService {
 		// if (order.getStatus() == OrderStatus.PAID) {
 		//     paymentService.cancelPayment(order.getPaymentId());
 		// }
+	}
+	/**
+	 * 구매 확정
+	 */
+	@Transactional
+	public void confirmOrder(UUID orderId, UUID currentUserId) {
+		Order order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. ID: " + orderId));
+
+		// 권한 검증
+		if (!order.getBuyerId().equals(currentUserId)) {
+			throw new CustomException(ErrorCode.FORBIDDEN, "본인의 주문만 구매 확정할 수 있습니다.");
+		}
+
+		// 엔티티 내부에서 상태 검증(DELIVERED 여부) 및 변경 수행
+		order.confirm();
 	}
 
 	/**

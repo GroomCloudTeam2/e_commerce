@@ -29,6 +29,11 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 		+ "WHERE c.parent IS NULL AND c.isActive = true ORDER BY c.sortOrder")
 	List<Category> findRootCategoriesWithChildren();
 
+	// (Master) 대분류 조회 시 자식들까지 한 번에 로딩 (비활성 포함)
+	@Query("SELECT c FROM Category c LEFT JOIN FETCH c.children "
+		+ "WHERE c.parent IS NULL ORDER BY c.sortOrder")
+	List<Category> findRootCategoriesWithChildrenIncludingInactive();
+
 	// 카테고리 삭제 전 자식이 있는지 검사
 	boolean existsByParentId(UUID parentId);
 
