@@ -35,7 +35,7 @@ public class AddressControllerV1 {
 	@Operation(summary = "배송지 목록 조회")
 	@GetMapping
 	public ResponseEntity<List<ResAddressDtoV1>> getAddresses(@AuthenticationPrincipal CustomUserDetails user) {
-        return ResponseEntity.ok(addressService.getAddresses(user.getUserId()));
+		return ResponseEntity.ok(addressService.getAddresses(user.userId()));
 	}
 
 	@Operation(summary = "배송지 등록")
@@ -43,7 +43,7 @@ public class AddressControllerV1 {
 	public ResponseEntity<Void> createAddress(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@Valid @RequestBody ReqAddressDtoV1 request) {
-		addressService.createAddress(user.getUserId(), request);
+		addressService.createAddress(user.userId(), request);
 		return ResponseEntity.ok().build();
 	}
 
@@ -53,7 +53,7 @@ public class AddressControllerV1 {
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID addressId,
 		@Valid @RequestBody ReqAddressDtoV1 request) {
-		addressService.updateAddress(user.getUserId(), addressId, request);
+		addressService.updateAddress(user.userId(), addressId, request);
 		return ResponseEntity.ok().build();
 	}
 
@@ -62,7 +62,7 @@ public class AddressControllerV1 {
 	public ResponseEntity<Void> deleteAddress(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID addressId) {
-		addressService.deleteAddress(user.getUserId(), addressId);
+		addressService.deleteAddress(user.userId(), addressId);
 		return ResponseEntity.ok().build();
 	}
 
@@ -71,7 +71,7 @@ public class AddressControllerV1 {
 	public ResponseEntity<Void> setDefaultAddress(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID addressId) {
-		addressService.setDefaultAddress(user.getUserId(), addressId);
+		addressService.setDefaultAddress(user.userId(), addressId);
 		return ResponseEntity.ok().build();
 	}
 }

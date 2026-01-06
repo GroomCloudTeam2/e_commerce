@@ -1,41 +1,55 @@
 spring:
+  application:
+    name: e_commerce
+
   datasource:
-    # 도커에 띄운 PostgreSQL 연결 정보
-    url: jdbc:postgresql://localhost:5432/ecommerce
+    url: jdbc:postgresql://localhost:5400/ecommerce
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      # 테스트 실행 시마다 테이블을 새로 생성하고 종료 시 삭제
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+        default_batch_fetch_size: 100
+        # 👇 (선택) PostgreSQL 전용 방언 설정 (없어도 되지만 넣으면 더 안정적)
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# 테스트용 JWT 시크릿 (기존 유지)
+  security:
+    user:
+      name: user
+      password: 1234
+
+
 jwt:
-  secret: test-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
+  secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
   access-token-validity: 3600000
   refresh-token-validity: 604800000
 
-# Toss Payments 더미 설정 (Bean 생성 오류 방지용)
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:dummy}
+    base-url: https://api.openai.com
+    model: gpt-4o-mini
+
+
+
+logging:
+  level:
+    com.groom.ecommerce: DEBUG
+    org.hibernate.SQL: DEBUG
+
 toss:
   payments:
     base-url: https://api.tosspayments.com
-    secret-key: test_sk_dummy
-    client-key: test_ck_dummy
-    success-url: http://localhost:8080/success
-    fail-url: http://localhost:8080/fail
-    connect-timeout-ms: 1000
-    read-timeout-ms: 1000
+    secret-key: ${TOSS_PAYMENTS_SECRET_KEY:}
+    client-key: test_ck_AQ92ymxN349xlKM196KKVajRKXvd
+    success-url: http://localhost:8080/pay-success.html
+    fail-url: http://localhost:8080/pay-fail.html
+    connect-timeout-ms: 3000
+    read-timeout-ms: 5000
 
-# AI Dummy Config
-ai:
-  openai:
-    api-key: dummy-api-key
-    base-url: https://api.openai.com
-    model: gpt-4o-mini

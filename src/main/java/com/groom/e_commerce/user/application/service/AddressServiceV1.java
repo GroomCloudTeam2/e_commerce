@@ -42,8 +42,8 @@ public class AddressServiceV1 {
 
 		AddressEntity address = AddressEntity.builder()
 			.user(user)
-                .recipient(request.getRecipient()) // 추가
-                .recipientPhone(request.getRecipientPhone()) // 추가
+			.recipient(request.getRecipient()) // 추가
+			.recipientPhone(request.getRecipientPhone()) // 추가
 			.zipCode(request.getZipCode())
 			.address(request.getAddress())
 			.detailAddress(request.getDetailAddress())

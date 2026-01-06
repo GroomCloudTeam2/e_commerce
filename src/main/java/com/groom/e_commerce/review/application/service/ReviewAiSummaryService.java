@@ -45,8 +45,9 @@ public class ReviewAiSummaryService {
 							PageRequest.of(0, 10)
 						)
 					));
-		String productTitle= String.valueOf(productRepository.findTitleById(productId));
-		String prompt = promptBuilder.build(productTitle,reviews);
+		String productTitle = productRepository.findTitleById(productId)
+			.orElseThrow(() -> new IllegalStateException("상품 제목이 없습니다."));
+		String prompt = promptBuilder.build(productTitle, reviews);
 		String aiReview = openAiRestClient.summarizeReviews(prompt);
 
 		ProductRatingEntity rating = productRatingRepository

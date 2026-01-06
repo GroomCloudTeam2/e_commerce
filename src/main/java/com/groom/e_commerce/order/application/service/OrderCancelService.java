@@ -1,16 +1,17 @@
 package com.groom.e_commerce.order.application.service;
 
-import com.groom.e_commerce.order.application.port.out.PaymentPort;
-import com.groom.e_commerce.order.domain.entity.Order;
-import com.groom.e_commerce.order.domain.entity.OrderItem;
-import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
-import com.groom.e_commerce.order.presentation.dto.request.OrderCancelRequest;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import com.groom.e_commerce.order.application.port.out.PaymentPort;
+import com.groom.e_commerce.order.domain.entity.OrderItem;
+import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
+import com.groom.e_commerce.order.presentation.dto.request.OrderCancelRequest;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -49,12 +50,11 @@ public class OrderCancelService {
 		// // 5. 후처리 (결제 취소 성공 시 실행됨)
 		items.forEach(item -> {
 			item.cancel();
-		// 상태 변경 (CANCELLED)
-		// 	productService.increaseStock(item.getProductId(), item.getQuantity()); // 재고 복구
+			// 상태 변경 (CANCELLED)
+			// 	productService.increaseStock(item.getProductId(), item.getQuantity()); // 재고 복구
 		});
 
 		// (선택) 주문 전체 취소 동기화 로직은 여기에 추가
-
 
 	}
 }

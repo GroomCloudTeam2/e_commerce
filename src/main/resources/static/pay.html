@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="utf-8"/>
+    <meta content="width=device-width,initial-scale=1" name="viewport"/>
     <title>Toss 결제 테스트</title>
     <style>
         * {
@@ -261,13 +261,13 @@
 
         <div class="form-group">
             <label for="orderId">주문번호</label>
-            <input id="orderId" placeholder="예: 550e8400-e29b-41d4-a716-446655440000" />
+            <input id="orderId" placeholder="예: 550e8400-e29b-41d4-a716-446655440000"/>
             <div class="info-text">UUID 형식의 주문번호를 입력해주세요</div>
         </div>
 
         <div class="form-group">
             <label for="amount">결제금액</label>
-            <input id="amount" type="number" min="1" placeholder="예: 15000" />
+            <input id="amount" min="1" placeholder="예: 15000" type="number"/>
             <div class="info-text">1원 이상 금액을 입력해주세요</div>
         </div>
     </div>
@@ -290,7 +290,7 @@
         </div>
     </div>
 
-    <button id="btn" class="btn-pay">결제하기</button>
+    <button class="btn-pay" id="btn">결제하기</button>
 
     <div class="log-section" id="logContainer" style="display: none;">
         <div class="log-container">
@@ -353,8 +353,8 @@
 
         const readyRes = await fetch("/api/v1/payments/ready", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderId, amount })
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({orderId, amount})
         });
 
         if (!readyRes.ok) {
@@ -367,7 +367,7 @@
         log("✅ [2] READY 응답:", JSON.stringify(ready, null, 2));
 
         const tossPayments = TossPayments(ready.clientKey);
-        const payment = tossPayments.payment({ customerKey: "test-customer-key" });
+        const payment = tossPayments.payment({customerKey: "test-customer-key"});
 
         log("🚀 [3] 결제창 요청 시작...");
 

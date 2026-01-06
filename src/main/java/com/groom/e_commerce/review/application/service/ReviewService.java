@@ -1,5 +1,15 @@
 package com.groom.e_commerce.review.application.service;
 
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.HandlerMapping;
+
 import com.groom.e_commerce.global.infrastructure.client.Classification.AiRestClient;
 import com.groom.e_commerce.review.application.validator.OrderReviewValidator;
 import com.groom.e_commerce.review.domain.entity.ProductRatingEntity;
@@ -11,22 +21,13 @@ import com.groom.e_commerce.review.domain.repository.ReviewLikeRepository;
 import com.groom.e_commerce.review.domain.repository.ReviewRepository;
 import com.groom.e_commerce.review.presentation.dto.request.CreateReviewRequest;
 import com.groom.e_commerce.review.presentation.dto.request.UpdateReviewRequest;
+import com.groom.e_commerce.review.presentation.dto.response.PaginationResponse;
 import com.groom.e_commerce.review.presentation.dto.response.ProductReviewResponse;
 import com.groom.e_commerce.review.presentation.dto.response.ReviewResponse;
-import com.groom.e_commerce.review.presentation.dto.response.PaginationResponse;
-
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -38,6 +39,7 @@ public class ReviewService {
 	private final ProductRatingRepository productRatingRepository;
 	private final AiRestClient aiRestClient;
 	private final OrderReviewValidator orderReviewValidator;
+	private final HandlerMapping resourceHandlerMapping;
 
 	/**
 	 * 리뷰 작성
@@ -51,7 +53,6 @@ public class ReviewService {
 	) {
 		// 0. 주문/상품/유저 검증 (신규)
 		orderReviewValidator.validate(orderId, productId, currentUserId);
-
 
 		// 2. AI 카테고리 분류
 		ReviewCategory category = classifyComment(request.getContent());
@@ -78,7 +79,6 @@ public class ReviewService {
 
 		return ReviewResponse.fromEntity(review);
 	}
-
 
 	/**
 	 * 리뷰 수정
@@ -194,9 +194,9 @@ public class ReviewService {
 		try {
 			AiRestClient.AiResponse response = aiRestClient.classifyComment(comment);
 
-			if (response == null || response.getCategory() == null) {
+			if (response == null || response.getCategory() == null || response.getConfidence() < 0.6) {
 				log.warn(
-					"AI 응답이 비어있습니다. 기본 카테고리(ERR)로 설정합니다. comment: {}",
+					"기본 카테고리(ERR)로 설정합니다. comment: {}",
 					comment
 				);
 				return ReviewCategory.ERR;
@@ -214,7 +214,6 @@ public class ReviewService {
 			return ReviewCategory.ERR;
 		}
 	}
-
 
 	@Transactional
 	public int likeReview(UUID reviewId, UUID userId) {

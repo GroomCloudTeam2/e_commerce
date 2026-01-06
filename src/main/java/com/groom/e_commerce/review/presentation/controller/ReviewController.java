@@ -1,5 +1,18 @@
 package com.groom.e_commerce.review.presentation.controller;
 
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.groom.e_commerce.global.util.SecurityUtil;
 import com.groom.e_commerce.review.application.service.ReviewService;
 import com.groom.e_commerce.review.presentation.dto.request.CreateReviewRequest;
@@ -8,17 +21,21 @@ import com.groom.e_commerce.review.presentation.dto.response.ReviewResponse;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/reviews")
 public class ReviewController {
 
 	private final ReviewService reviewService;
+
+	/*
+	 * 인증 사용자 ID 조회
+	 * - 프로덕션: SecurityUtil 사용
+	 * - 테스트: override
+	 */
+	protected UUID getCurrentUserId() {
+		return SecurityUtil.getCurrentUserId();
+	}
 
 	// 리뷰 작성
 	@PostMapping("/{orderId}/items/{productId}")
@@ -28,26 +45,26 @@ public class ReviewController {
 		@PathVariable UUID productId,
 		@RequestBody CreateReviewRequest request
 	) {
-		UUID userId = SecurityUtil.getCurrentUserId();
+		UUID userId = getCurrentUserId();
 		return reviewService.createReview(orderId, productId, userId, request);
 	}
 
-	// 내 리뷰 조회로 바꾸자.
+	// 내 리뷰 조회
 	@GetMapping("/{reviewId}")
 	public ReviewResponse getReview(
 		@PathVariable UUID reviewId
 	) {
-		UUID userId = SecurityUtil.getCurrentUserId();
+		UUID userId = getCurrentUserId();
 		return reviewService.getReview(reviewId, userId);
 	}
 
 	// 리뷰 수정
-	@PutMapping("/reviewId")
+	@PutMapping("/{reviewId}")
 	public ReviewResponse updateReview(
 		@PathVariable UUID reviewId,
 		@RequestBody UpdateReviewRequest request
 	) {
-		UUID userId = SecurityUtil.getCurrentUserId();
+		UUID userId = getCurrentUserId();
 		return reviewService.updateReview(reviewId, userId, request);
 	}
 
@@ -55,21 +72,21 @@ public class ReviewController {
 	@DeleteMapping("/{reviewId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteReview(@PathVariable UUID reviewId) {
-		UUID userId = SecurityUtil.getCurrentUserId();
+		UUID userId = getCurrentUserId();
 		reviewService.deleteReview(reviewId, userId);
 	}
+
 	// 리뷰 좋아요
 	@PostMapping("/{reviewId}/like")
 	public int likeReview(@PathVariable UUID reviewId) {
-		UUID userId = SecurityUtil.getCurrentUserId();
+		UUID userId = getCurrentUserId();
 		return reviewService.likeReview(reviewId, userId);
 	}
 
 	// 리뷰 좋아요 취소
 	@DeleteMapping("/{reviewId}/like")
 	public int unlikeReview(@PathVariable UUID reviewId) {
-		UUID userId = SecurityUtil.getCurrentUserId();
+		UUID userId = getCurrentUserId();
 		return reviewService.unlikeReview(reviewId, userId);
 	}
-
 }

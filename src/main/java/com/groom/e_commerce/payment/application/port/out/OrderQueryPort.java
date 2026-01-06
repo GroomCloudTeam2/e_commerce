@@ -10,5 +10,6 @@ public interface OrderQueryPort {
 		long totalPaymentAmt,
 		String orderNumber,
 		String recipientName
-	) {}
+	) {
+	}
 }

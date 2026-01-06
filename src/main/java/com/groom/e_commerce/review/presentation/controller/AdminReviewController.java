@@ -16,10 +16,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminReviewController {
 
-    private final ReviewAiSummaryService reviewAiSummaryService;
+	private final ReviewAiSummaryService reviewAiSummaryService;
 
-    @PostMapping("/{productId}/ai-summary")
-    public void regenerateAiReview(@PathVariable UUID productId) {
-        reviewAiSummaryService.generate(productId);
-    }
+	@PostMapping("/{productId}/ai-summary")
+	public void regenerateAiReview(@PathVariable UUID productId) {
+		reviewAiSummaryService.generate(productId);
+	}
 }

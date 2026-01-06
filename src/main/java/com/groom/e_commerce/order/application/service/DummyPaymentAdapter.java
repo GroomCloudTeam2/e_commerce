@@ -1,9 +1,11 @@
 package com.groom.e_commerce.order.application.service;
 
-import com.groom.e_commerce.order.application.port.out.PaymentPort;
-import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.stereotype.Component;
+
+import com.groom.e_commerce.order.application.port.out.PaymentPort;
 
 // 👇 @Component를 붙여야 스프링이 "아, 이게 PaymentPort 구현체구나!" 하고 인식합니다.
 @Component

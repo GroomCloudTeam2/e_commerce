@@ -22,24 +22,23 @@ public class ResUserDtoV1 {
 	private UserRole role;
 	private UserStatus status;
 	// 기본 배송지 추가
-    private ResAddressDtoV1 defaultAddress;
-    // --------------
-    private LocalDateTime createdAt;
+	private ResAddressDtoV1 defaultAddress;
+	// --------------
+	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-
-    public static ResUserDtoV1 from(UserEntity user) {
-        return ResUserDtoV1.builder()
-                .id(user.getUserId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .phoneNumber(user.getPhoneNumber())
-                .role(user.getRole())
-                .status(user.getStatus())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-    }
+	public static ResUserDtoV1 from(UserEntity user) {
+		return ResUserDtoV1.builder()
+			.id(user.getUserId())
+			.email(user.getEmail())
+			.nickname(user.getNickname())
+			.phoneNumber(user.getPhoneNumber())
+			.role(user.getRole())
+			.status(user.getStatus())
+			.createdAt(user.getCreatedAt())
+			.updatedAt(user.getUpdatedAt())
+			.build();
+	}
 
 	public static ResUserDtoV1 from(UserEntity user, AddressEntity defaultAddress) {
 		return ResUserDtoV1.builder()
@@ -49,7 +48,7 @@ public class ResUserDtoV1 {
 			.phoneNumber(user.getPhoneNumber())
 			.role(user.getRole())
 			.status(user.getStatus())
-            .defaultAddress(defaultAddress != null ? ResAddressDtoV1.from(defaultAddress) : null)
+			.defaultAddress(defaultAddress != null ? ResAddressDtoV1.from(defaultAddress) : null)
 			.createdAt(user.getCreatedAt())
 			.updatedAt(user.getUpdatedAt())
 			.build();

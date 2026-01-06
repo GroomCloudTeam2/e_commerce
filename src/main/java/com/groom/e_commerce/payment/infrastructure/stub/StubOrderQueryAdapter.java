@@ -2,7 +2,6 @@ package com.groom.e_commerce.payment.infrastructure.stub;
 
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.groom.e_commerce.payment.application.port.out.OrderQueryPort;

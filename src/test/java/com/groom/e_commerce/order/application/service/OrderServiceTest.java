@@ -1,10 +1,11 @@
 package com.groom.e_commerce.order.application.service;
 
-import com.groom.e_commerce.order.domain.entity.Order;
-import com.groom.e_commerce.order.domain.entity.OrderItem;
-import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
-import com.groom.e_commerce.order.domain.status.OrderStatus;
-import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,11 +14,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
+import com.groom.e_commerce.order.domain.entity.Order;
+import com.groom.e_commerce.order.domain.entity.OrderItem;
+import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
+import com.groom.e_commerce.order.domain.status.OrderStatus;
+import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {

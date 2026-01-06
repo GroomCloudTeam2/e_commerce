@@ -57,7 +57,8 @@ public class ResProductSearchDtoV1 {
 			.build();
 	}
 
-	public static ResProductSearchDtoV1 from(Product product, Double avgRating, Integer reviewCount, String ownerStoreName) {
+	public static ResProductSearchDtoV1 from(Product product, Double avgRating, Integer reviewCount,
+		String ownerStoreName) {
 		BigDecimal minPrice = product.getPrice();
 		BigDecimal maxPrice = product.getPrice();
 

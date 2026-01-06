@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import com.groom.e_commerce.user.domain.entity.AddressEntity;
-import com.groom.e_commerce.user.domain.repository.AddressRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +13,11 @@ import org.springframework.util.StringUtils;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.global.util.SecurityUtil;
+import com.groom.e_commerce.user.domain.entity.AddressEntity;
 import com.groom.e_commerce.user.domain.entity.PeriodType;
 import com.groom.e_commerce.user.domain.entity.UserEntity;
 import com.groom.e_commerce.user.domain.entity.UserRole;
+import com.groom.e_commerce.user.domain.repository.AddressRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
 import com.groom.e_commerce.user.presentation.dto.request.ReqUpdateUserDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.ResSalesStatDtoV1;
@@ -33,20 +33,20 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceV1 {
 
 	private final UserRepository userRepository;
-    private final AddressRepository addressRepository;
+	private final AddressRepository addressRepository;
 	private final PasswordEncoder passwordEncoder;
 
 	public ResUserDtoV1 getMe() {
 		UUID userId = SecurityUtil.getCurrentUserId();
 
-        // -- 기본 배송지 조회 --
-        UserEntity user = findUserById(userId);
+		// -- 기본 배송지 조회 --
+		UserEntity user = findUserById(userId);
 
-        AddressEntity defaultAddress = addressRepository
-                .findByUserUserIdAndIsDefaultTrue(userId)
-                .orElse(null);
+		AddressEntity defaultAddress = addressRepository
+			.findByUserUserIdAndIsDefaultTrue(userId)
+			.orElse(null);
 
-        return ResUserDtoV1.from(user, defaultAddress);
+		return ResUserDtoV1.from(user, defaultAddress);
 	}
 
 	@Transactional

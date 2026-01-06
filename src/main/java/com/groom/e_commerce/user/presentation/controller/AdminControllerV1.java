@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.groom.e_commerce.review.application.service.ReviewAiSummaryService;
 import com.groom.e_commerce.user.application.service.AdminServiceV1;
 import com.groom.e_commerce.user.presentation.dto.request.ReqCreateManagerDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.ResUserDtoV1;

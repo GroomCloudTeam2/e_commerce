@@ -48,7 +48,7 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 	private OrderStatus status;
 
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<OrderItem> item = new ArrayList<>();
+	private final List<OrderItem> item = new ArrayList<>();
 
 	/* ================= 배송지 스냅샷 (ERD 제약조건 반영) ================= */
 
@@ -126,6 +126,7 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 		}
 		this.status = OrderStatus.CONFIRMED;
 	}
+
 	public void syncStatus() {
 		if (this.item == null || this.item.isEmpty()) {
 			return;

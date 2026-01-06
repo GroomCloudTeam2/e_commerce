@@ -40,6 +40,32 @@ public class ResProductDetailDtoV1 {
 	private RatingInfo rating;
 	private LocalDateTime createdAt;
 
+	public static ResProductDetailDtoV1 from(Product product) {
+		return from(product, null, null, null);
+	}
+
+	public static ResProductDetailDtoV1 from(Product product, Double avgRating, Integer reviewCount,
+		String ownerStoreName) {
+		return ResProductDetailDtoV1.builder()
+			.productId(product.getId())
+			.title(product.getTitle())
+			.description(product.getDescription())
+			.thumbnailUrl(product.getThumbnailUrl())
+			.status(product.getStatus())
+			.hasOptions(product.getHasOptions())
+			.category(CategoryInfo.from(product.getCategory()))
+			.owner(OwnerInfo.from(product.getOwnerId(), ownerStoreName))
+			.options(product.getOptions().stream()
+				.map(OptionInfo::from)
+				.collect(Collectors.toList()))
+			.variants(product.getVariants().stream()
+				.map(VariantInfo::from)
+				.collect(Collectors.toList()))
+			.rating(RatingInfo.from(avgRating, reviewCount))
+			.createdAt(product.getCreatedAt())
+			.build();
+	}
+
 	@Getter
 	@Builder
 	public static class CategoryInfo {
@@ -163,30 +189,5 @@ public class ResProductDetailDtoV1 {
 				.reviewCount(reviewCount)
 				.build();
 		}
-	}
-
-	public static ResProductDetailDtoV1 from(Product product) {
-		return from(product, null, null, null);
-	}
-
-	public static ResProductDetailDtoV1 from(Product product, Double avgRating, Integer reviewCount, String ownerStoreName) {
-		return ResProductDetailDtoV1.builder()
-			.productId(product.getId())
-			.title(product.getTitle())
-			.description(product.getDescription())
-			.thumbnailUrl(product.getThumbnailUrl())
-			.status(product.getStatus())
-			.hasOptions(product.getHasOptions())
-			.category(CategoryInfo.from(product.getCategory()))
-			.owner(OwnerInfo.from(product.getOwnerId(), ownerStoreName))
-			.options(product.getOptions().stream()
-				.map(OptionInfo::from)
-				.collect(Collectors.toList()))
-			.variants(product.getVariants().stream()
-				.map(VariantInfo::from)
-				.collect(Collectors.toList()))
-			.rating(RatingInfo.from(avgRating, reviewCount))
-			.createdAt(product.getCreatedAt())
-			.build();
 	}
 }

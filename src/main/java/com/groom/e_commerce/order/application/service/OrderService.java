@@ -13,11 +13,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.order.domain.entity.Order;
 import com.groom.e_commerce.order.domain.entity.OrderItem;
 import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
 import com.groom.e_commerce.order.domain.repository.OrderRepository;
-import com.groom.e_commerce.order.domain.status.OrderStatus;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateItemRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
@@ -27,8 +28,6 @@ import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
-import com.groom.e_commerce.global.presentation.advice.CustomException;
-import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -53,7 +52,6 @@ public class OrderService {
 	 */
 	@Transactional // 쓰기 트랜잭션 시작
 	public UUID createOrder(UUID buyerId, OrderCreateRequest request) {
-
 
 		ResAddressDtoV1 addressInfo = addressService.getAddress(request.getAddressId(), buyerId);
 		// 2. 주문번호 생성
@@ -139,18 +137,6 @@ public class OrderService {
 		return datePart + "-" + randomPart;
 	}
 
-	// 👇 [임시] 파일 하나로 해결하기 위해 내부에 만든 가짜 DTO 클래스
-	@Getter
-	@Builder
-	static class MockProductResponse {
-		private UUID productId;
-		private UUID ownerId;
-		private String name;
-		private String thumbnail;
-		private String optionName;
-		private Long price;
-	}
-
 	@Transactional(readOnly = true) // 중요: 조회 전용 트랜잭션 (성능 최적화)
 	public OrderResponse getOrder(UUID orderId) {
 		Order order = orderRepository.findByIdWithItems(orderId)
@@ -193,6 +179,7 @@ public class OrderService {
 		//     paymentService.cancelPayment(order.getPaymentId());
 		// }
 	}
+
 	/**
 	 * 구매 확정
 	 */
@@ -229,8 +216,6 @@ public class OrderService {
 		}
 	}
 
-
-
 	/**
 	 * 배송 완료 처리 (관리자/시스템)
 	 */
@@ -248,6 +233,18 @@ public class OrderService {
 		for (Order order : orders) {
 			order.syncStatus(); // Order 상태 변경.
 		}
+	}
+
+	// 👇 [임시] 파일 하나로 해결하기 위해 내부에 만든 가짜 DTO 클래스
+	@Getter
+	@Builder
+	static class MockProductResponse {
+		private UUID productId;
+		private UUID ownerId;
+		private String name;
+		private String thumbnail;
+		private String optionName;
+		private Long price;
 	}
 
 }
