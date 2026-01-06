@@ -45,4 +45,18 @@ public class ResCategoryDtoV1 {
 				.toList())
 			.build();
 	}
+
+	public static ResCategoryDtoV1 fromWithChildrenIncludingInactive(Category category) {
+		return ResCategoryDtoV1.builder()
+			.id(category.getId())
+			.name(category.getName())
+			.depth(category.getDepth())
+			.sortOrder(category.getSortOrder())
+			.isActive(category.getIsActive())
+			.parentId(category.getParent() != null ? category.getParent().getId() : null)
+			.children(category.getChildren().stream()
+				.map(ResCategoryDtoV1::fromWithChildrenIncludingInactive)
+				.toList())
+			.build();
+	}
 }

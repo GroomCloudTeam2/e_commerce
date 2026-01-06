@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
 import com.groom.e_commerce.order.application.service.OrderService;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateRequest;
+import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
 import com.groom.e_commerce.order.presentation.dto.response.OrderResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,5 +53,35 @@ public class OrderController {
 	public ResponseEntity<String> cancelOrder(@PathVariable UUID orderId) {
 		orderService.cancelOrder(orderId);
 		return ResponseEntity.ok("주문이 성공적으로 취소되었습니다.");
+	}
+
+	@Operation(summary = "배송 시작 처리", description = "관리자가 주문 상품들을 배송 중 상태로 변경합니다.")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')") // MANAGER 또는 MASTER 권한이 있어야
+	@PostMapping("/shipping")
+	public ResponseEntity<String> startShipping(@RequestBody OrderStatusChangeRequest request) {
+		orderService.startShipping(request);
+		return ResponseEntity.ok("선택한 상품이 배송 시작 상태로 변경되었습니다.");
+	}
+
+	@Operation(summary = "배송 완료 처리", description = "관리자가 주문 상품들을 배송 완료 상태로 변경합니다.")
+	@PostMapping("/delivered")
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')") // MANAGER 또는 MASTER 권한이 있어야
+	public ResponseEntity<String> completeDelivery(@RequestBody OrderStatusChangeRequest request) {
+		orderService.completeDelivery(request);
+		return ResponseEntity.ok("선택한 상품이 배송 완료 상태로 변경되었습니다.");
+	}
+	@Operation(summary = "구매 확정", description = "배송이 완료된 주문을 구매 확정 처리합니다.")
+	@PostMapping("/{orderId}/confirm")
+	public ResponseEntity<String> confirmOrder(
+		@PathVariable UUID orderId,
+		@AuthenticationPrincipal CustomUserDetails userDetails
+	) {
+		// 1. JWT에서 사용자 ID 추출
+		UUID currentUserId = userDetails.getUserId();
+
+		// 2. 서비스 호출
+		orderService.confirmOrder(orderId, currentUserId);
+
+		return ResponseEntity.ok("구매가 정상적으로 확정되었습니다.");
 	}
 }

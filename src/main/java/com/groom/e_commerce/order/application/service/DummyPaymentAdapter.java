@@ -10,11 +10,9 @@ import java.util.UUID;
 public class DummyPaymentAdapter implements PaymentPort {
 
 	@Override
-	public void cancelPayment(UUID orderId, Long amount, List<UUID> orderItemIds) {
-		// 실제 로직 없음. 로그만 찍고 성공한 척함.
-		System.out.println("====== [TEST] 가짜 결제 취소 요청됨 ======");
-		System.out.println("OrderID: " + orderId);
-		System.out.println("Amount: " + amount);
-		System.out.println("========================================");
+	public void cancelPayment(UUID orderId, Long cancelAmount, List<UUID> orderItemIds) {
+		System.out.println("결제 취소 요청 - Order ID: " + orderId);
+		System.out.println("Cancel Amount: " + cancelAmount);
+		System.out.println("Canceled Items: " + orderItemIds);
 	}
 }
