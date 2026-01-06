@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,8 +14,15 @@ import org.springframework.stereotype.Repository;
 import com.groom.e_commerce.product.domain.entity.ProductVariant;
 import com.groom.e_commerce.product.domain.enums.VariantStatus;
 
+import jakarta.persistence.LockModeType;
+
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, UUID> {
+
+	// 재고 차감을 위한 비관적 락 조회
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT v FROM ProductVariant v WHERE v.id = :id AND v.product.id = :productId")
+	Optional<ProductVariant> findByIdAndProductIdWithLock(@Param("id") UUID id, @Param("productId") UUID productId);
 
 	// 상품의 모든 Variant 조회 (manager용)
 	List<ProductVariant> findByProductId(UUID productId);
