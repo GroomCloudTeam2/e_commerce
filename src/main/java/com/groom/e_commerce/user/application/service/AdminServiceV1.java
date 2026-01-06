@@ -10,16 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.seller.SellerEntity;
-import com.groom.e_commerce.user.domain.entity.seller.SellerStatus;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerEntity;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerStatus;
 import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 import com.groom.e_commerce.user.domain.entity.user.UserRole;
 import com.groom.e_commerce.user.domain.entity.user.UserStatus;
-import com.groom.e_commerce.user.domain.repository.SellerRepository;
+import com.groom.e_commerce.user.domain.repository.OwnerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
 import com.groom.e_commerce.user.presentation.dto.request.admin.ReqCreateManagerDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.admin.ResSellerApprovalListDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.admin.ResOwnerApprovalListDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.owner.ResOwnerApprovalDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
 import com.groom.e_commerce.user.presentation.dto.response.user.ResUserListDtoV1;
 
@@ -34,7 +34,7 @@ public class AdminServiceV1 {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final SellerRepository sellerRepository;
+	private final OwnerRepository ownerRepository;
 
 	// ==================== Manager 기능 ====================
 
@@ -141,72 +141,72 @@ public class AdminServiceV1 {
 	}
 
 	/**
-	 * 승인 대기 중인 Seller 목록 조회 (Manager)
+	 * 승인 대기 중인 owner 목록 조회 (Manager)
 	 */
-	public ResSellerApprovalListDtoV1 getPendingSellerList(Pageable pageable) {
-		Page<ResSellerApprovalDtoV1> pendingSellers = sellerRepository
-			.findBySellerStatusAndDeletedAtIsNull(SellerStatus.PENDING, pageable)
-			.map(ResSellerApprovalDtoV1::from);
-		return ResSellerApprovalListDtoV1.from(pendingSellers);
+	public ResOwnerApprovalListDtoV1 getPendingOwnerList(Pageable pageable) {
+		Page<ResOwnerApprovalDtoV1> pendingOwners = ownerRepository
+			.findByOwnerStatusAndDeletedAtIsNull(OwnerStatus.PENDING, pageable)
+			.map(ResOwnerApprovalDtoV1::from);
+		return ResOwnerApprovalListDtoV1.from(pendingOwners);
 	}
 
 	/**
-	 * 특정 상태의 Seller 목록 조회 (Manager)
+	 * 특정 상태의 owner 목록 조회 (Manager)
 	 */
-	public ResSellerApprovalListDtoV1 getSellerListByStatus(SellerStatus status, Pageable pageable) {
-		Page<ResSellerApprovalDtoV1> sellers = sellerRepository
-			.findBySellerStatusAndDeletedAtIsNull(status, pageable)
-			.map(ResSellerApprovalDtoV1::from);
-		return ResSellerApprovalListDtoV1.from(sellers);
+	public ResOwnerApprovalListDtoV1 getOwnerListByStatus(OwnerStatus status, Pageable pageable) {
+		Page<ResOwnerApprovalDtoV1> owners = ownerRepository
+			.findByOwnerStatusAndDeletedAtIsNull(status, pageable)
+			.map(ResOwnerApprovalDtoV1::from);
+		return ResOwnerApprovalListDtoV1.from(owners);
 	}
 
 	/**
-	 * Seller 승인 요청 상세 조회 (Manager)
+	 * owner 승인 요청 상세 조회 (Manager)
 	 */
-	public ResSellerApprovalDtoV1 getSellerApprovalDetail(UUID sellerId) {
-		SellerEntity seller = findSellerById(sellerId);
-		return ResSellerApprovalDtoV1.from(seller);
+	public ResOwnerApprovalDtoV1 getOwnerApprovalDetail(UUID ownerId) {
+		OwnerEntity owner = findOwnerById(ownerId);
+		return ResOwnerApprovalDtoV1.from(owner);
 	}
 
 	/**
-	 * Seller 승인 (Manager)
+	 * owner 승인 (Manager)
 	 */
 	@Transactional
-	public ResSellerApprovalDtoV1 approveSeller(UUID sellerId) {
-		SellerEntity seller = findSellerById(sellerId);
+	public ResOwnerApprovalDtoV1 approveOwner(UUID ownerId) {
+		OwnerEntity owner = findOwnerById(ownerId);
 
-		if (!seller.isPending()) {
+		if (!owner.isPending()) {
 			throw new CustomException(ErrorCode.VALIDATION_ERROR,
-				"승인 대기 상태인 요청만 승인할 수 있습니다. 현재 상태: " + seller.getSellerStatus());
+				"승인 대기 상태인 요청만 승인할 수 있습니다. 현재 상태: " + owner.getOwnerStatus());
 		}
 
-		seller.approve();
-		log.info("Seller approved: sellerId={}, storeName={}", sellerId, seller.getStoreName());
+		owner.approve();
+		log.info("Owner approved: OwnerId={}, storeName={}", ownerId, owner.getStoreName());
 
-		return ResSellerApprovalDtoV1.from(seller);
+		return ResOwnerApprovalDtoV1.from(owner);
 	}
 
 	/**
-	 * Seller 승인 거절 (Manager)
+	 * Owner 승인 거절 (Manager)
 	 */
 	@Transactional
-	public ResSellerApprovalDtoV1 rejectSeller(UUID sellerId, String rejectedReason) {
-		SellerEntity seller = findSellerById(sellerId);
+	public ResOwnerApprovalDtoV1 rejectOwner(UUID ownerId, String rejectedReason) {
+		OwnerEntity owner = findOwnerById(ownerId);
 
-		if (!seller.isPending()) {
+		if (!owner.isPending()) {
 			throw new CustomException(ErrorCode.VALIDATION_ERROR,
-				"승인 대기 상태인 요청만 거절할 수 있습니다. 현재 상태: " + seller.getSellerStatus());
+				"승인 대기 상태인 요청만 거절할 수 있습니다. 현재 상태: " + owner.getOwnerStatus());
 		}
 
-		seller.reject(rejectedReason);
-		log.info("Seller rejected: sellerId={}, storeName={}, reason={}",
-			sellerId, seller.getStoreName(), rejectedReason);
+		owner.reject(rejectedReason);
+		log.info("owner rejected: ownerId={}, storeName={}, reason={}",
+			ownerId, owner.getStoreName(), rejectedReason);
 
-		return ResSellerApprovalDtoV1.from(seller);
+		return ResOwnerApprovalDtoV1.from(owner);
 	}
 
-	private SellerEntity findSellerById(UUID sellerId) {
-		return sellerRepository.findBySellerIdAndDeletedAtIsNull(sellerId)
+	private OwnerEntity findOwnerById(UUID ownerId) {
+		return ownerRepository.findByOwnerIdAndDeletedAtIsNull(ownerId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "해당 판매자를 찾을 수 없습니다."));
 	}
 }

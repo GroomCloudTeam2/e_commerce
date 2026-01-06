@@ -1,4 +1,4 @@
-package com.groom.e_commerce.user.presentation.dto.request.seller;
+package com.groom.e_commerce.user.presentation.dto.request.owner;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class ReqRejectSellerDtoV1 {
+public class ReqRejectOwnerDtoV1 {
 
 	@NotBlank(message = "거절 사유는 필수입니다.")
 	private String rejectedReason;

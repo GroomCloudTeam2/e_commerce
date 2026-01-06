@@ -42,6 +42,6 @@ public class ReqSignupDtoV1 {
 	private String approvalRequest;
 
 	public boolean isOwner() {
-		return this.role == UserRole.SELLER;
+		return this.role == UserRole.OWNER;
 	}
 }
