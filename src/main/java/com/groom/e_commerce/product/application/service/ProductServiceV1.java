@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.global.util.SecurityUtil;
+import com.groom.e_commerce.product.application.dto.StockManagement;
 import com.groom.e_commerce.product.domain.entity.Category;
 import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.entity.ProductOption;
@@ -310,6 +311,74 @@ public class ProductServiceV1 {
 	private void validateProductOwnership(Product product, UUID ownerId) {
 		if (!product.isOwnedBy(ownerId)) {
 			throw new CustomException(ErrorCode.PRODUCT_ACCESS_DENIED);
+		}
+	}
+
+	// ==================== 재고 관리 (Order 도메인 연동) ====================
+
+	/**
+	 * 단일 상품 재고 차감
+	 */
+	@Transactional
+	public void decreaseStock(UUID productId, UUID variantId, int quantity) {
+		if (variantId != null) {
+			// 옵션 상품 차감
+			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
+				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
+			
+			variant.decreaseStock(quantity);
+		} else {
+			// 단일 상품 차감
+			Product product = productRepository.findByIdWithLock(productId)
+				.orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+			if (Boolean.TRUE.equals(product.getHasOptions())) {
+				throw new CustomException(ErrorCode.VARIANT_REQUIRED);
+			}
+
+			product.decreaseStock(quantity);
+		}
+	}
+
+	/**
+	 * Bulk 재고 차감 (여러 상품 동시 처리)
+	 */
+	@Transactional
+	public void decreaseStockBulk(List<StockManagement> items) {
+		for (StockManagement item : items) {
+			decreaseStock(item.getProductId(), item.getVariantId(), item.getQuantity());
+		}
+	}
+
+	/**
+	 * 재고 복원 (주문 취소용)
+	 */
+	@Transactional
+	public void increaseStock(UUID productId, UUID variantId, int quantity) {
+		if (variantId != null) {
+			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
+				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
+			
+			variant.increaseStock(quantity);
+		} else {
+			Product product = productRepository.findByIdWithLock(productId)
+				.orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+			if (Boolean.TRUE.equals(product.getHasOptions())) {
+				throw new CustomException(ErrorCode.VARIANT_REQUIRED);
+			}
+
+			product.increaseStock(quantity);
+		}
+	}
+
+	/**
+	 * Bulk 재고 복원
+	 */
+	@Transactional
+	public void increaseStockBulk(List<StockManagement> items) {
+		for (StockManagement item : items) {
+			increaseStock(item.getProductId(), item.getVariantId(), item.getQuantity());
 		}
 	}
 }
