@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +51,7 @@ public class ClaimController {
 		return ResponseEntity.ok(null);
 	}
 	// 관리자: 승인
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
 	@PostMapping("/admin/claims/{claimId}/approve")
 	public ResponseEntity<Void> approveClaim(
 		@AuthenticationPrincipal CustomUserDetails user,
@@ -60,6 +62,7 @@ public class ClaimController {
 	}
 
 	// 관리자: 거절
+	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
 	@PostMapping("/admin/claims/{claimId}/reject")
 	public ResponseEntity<Void> rejectClaim(
 		@AuthenticationPrincipal CustomUserDetails user,

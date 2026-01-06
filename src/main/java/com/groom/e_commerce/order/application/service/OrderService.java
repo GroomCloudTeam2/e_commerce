@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,14 +17,18 @@ import com.groom.e_commerce.order.domain.entity.Order;
 import com.groom.e_commerce.order.domain.entity.OrderItem;
 import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
 import com.groom.e_commerce.order.domain.repository.OrderRepository;
+import com.groom.e_commerce.order.domain.status.OrderStatus;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateItemRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateRequest;
+import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
 import com.groom.e_commerce.order.presentation.dto.response.OrderResponse;
 import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -156,7 +162,7 @@ public class OrderService {
 	/**
 	 * 주문 취소 (핵심 비즈니스 로직)
 	 */
-	@Transactional // ✅ 데이터 변경(상태 변경 + 재고 복구)이므로 필수
+	@Transactional // 데이터 변경(상태 변경 + 재고 복구)이므로 필수
 	public void cancelOrder(UUID orderId) {
 
 		// 1. 주문 조회
@@ -186,6 +192,62 @@ public class OrderService {
 		// if (order.getStatus() == OrderStatus.PAID) {
 		//     paymentService.cancelPayment(order.getPaymentId());
 		// }
+	}
+	/**
+	 * 구매 확정
+	 */
+	@Transactional
+	public void confirmOrder(UUID orderId, UUID currentUserId) {
+		Order order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. ID: " + orderId));
+
+		// 권한 검증
+		if (!order.getBuyerId().equals(currentUserId)) {
+			throw new CustomException(ErrorCode.FORBIDDEN, "본인의 주문만 구매 확정할 수 있습니다.");
+		}
+
+		// 엔티티 내부에서 상태 검증(DELIVERED 여부) 및 변경 수행
+		order.confirm();
+	}
+
+	/**
+	 * 배송 시작 처리 (관리자/시스템)
+	 */
+	@Transactional
+	public void startShipping(OrderStatusChangeRequest request) {
+		// 1. 아이템 상태 변경
+		List<OrderItem> items = orderItemRepository.findAllByOrderItemIdIn(request.orderItemIds());
+		items.forEach(OrderItem::startShipping);
+
+		// 2. 주문 상태 동기화 (이 부분이 훨씬 깔끔해집니다!)
+		Set<Order> orders = items.stream()
+			.map(OrderItem::getOrder)
+			.collect(Collectors.toSet());
+
+		for (Order order : orders) {
+			order.syncStatus(); // 엔티티가 스스로 상태를 계산하도록 위임
+		}
+	}
+
+
+
+	/**
+	 * 배송 완료 처리 (관리자/시스템)
+	 */
+	@Transactional
+	public void completeDelivery(OrderStatusChangeRequest request) {
+		List<OrderItem> items = orderItemRepository.findAllByOrderItemIdIn(request.orderItemIds());
+		if (items.isEmpty()) {
+			throw new IllegalArgumentException("대상 상품을 찾을 수 없습니다.");
+		}
+		items.forEach(OrderItem::completeDelivery);
+		Set<Order> orders = items.stream()
+			.map(OrderItem::getOrder)
+			.collect(Collectors.toSet());
+
+		for (Order order : orders) {
+			order.syncStatus(); // Order 상태 변경.
+		}
 	}
 
 }

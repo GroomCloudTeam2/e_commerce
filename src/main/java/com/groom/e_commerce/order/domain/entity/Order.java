@@ -126,4 +126,27 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 		}
 		this.status = OrderStatus.CONFIRMED;
 	}
+	public void syncStatus() {
+		if (this.item == null || this.item.isEmpty()) {
+			return;
+		}
+
+		// 1. 모든 상품이 '배송 완료'인지 확인
+		boolean allDelivered = this.item.stream()
+			.allMatch(orderItem -> orderItem.getItemStatus() == OrderStatus.DELIVERED);
+
+		// 2. 하나라도 '배송 중' (또는 이미 완료된 것)이 있는지 확인
+		// (배송 완료된 것도 넓은 의미에서는 배송이 시작된 것이므로 포함)
+		boolean anyShipping = this.item.stream()
+			.anyMatch(orderItem -> orderItem.getItemStatus() == OrderStatus.SHIPPING
+				|| orderItem.getItemStatus() == OrderStatus.DELIVERED);
+
+		// 3. 우선순위에 따라 상태 업데이트
+		if (allDelivered) {
+			this.status = OrderStatus.DELIVERED;
+		} else if (anyShipping) {
+			this.status = OrderStatus.SHIPPING;
+		}
+		// 그 외의 경우(아무것도 출발 안 함)는 기존 상태 유지
+	}
 }
