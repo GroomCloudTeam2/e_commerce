@@ -20,6 +20,6 @@ public class SecurityUtil {
 			throw new CustomException(ErrorCode.UNAUTHORIZED);
 		}
 		CustomUserDetails userDetails = (CustomUserDetails)auth.getPrincipal();
-		return userDetails.userId();
+		return userDetails.getUserId();
 	}
 }

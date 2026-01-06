@@ -27,7 +27,7 @@ import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
 
 import lombok.Builder;
 import lombok.Getter;

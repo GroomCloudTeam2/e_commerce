@@ -36,7 +36,7 @@ public class ClaimController {
 		@AuthenticationPrincipal CustomUserDetails user, // 인증된 유저 정보
 		@RequestBody ClaimDto.Request request) {
 
-		UUID claimId = claimService.createClaim(user.userId(), request);
+		UUID claimId = claimService.createClaim(user.getUserId(), request);
 
 		return ResponseEntity.ok(claimId);
 	}
@@ -62,7 +62,7 @@ public class ClaimController {
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID claimId) {
 
-		claimService.approveClaim(user.userId(), claimId);
+		claimService.approveClaim(user.getUserId(), claimId);
 		return ResponseEntity.ok().build();
 	}
 
@@ -74,7 +74,7 @@ public class ClaimController {
 		@PathVariable UUID claimId,
 		@RequestBody ClaimDto.RejectRequest request) {
 
-		claimService.rejectClaim(user.userId(), claimId, request.getRejectReason());
+		claimService.rejectClaim(user.getUserId(), claimId, request.getRejectReason());
 		return ResponseEntity.ok().build();
 	}
 }

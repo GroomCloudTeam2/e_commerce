@@ -37,7 +37,7 @@ public class OrderController {
 		// @RequestHeader("X-User-Id") UUID userId, // 나중에 게이트웨이에서 헤더로 넘어옴
 		@AuthenticationPrincipal CustomUserDetails userDetails) {
 
-		UUID buyerId = userDetails.userId();
+		UUID buyerId = userDetails.getUserId();
 
 		UUID orderId = orderService.createOrder(buyerId, request);
 		return ResponseEntity.ok(orderId);
@@ -78,7 +78,7 @@ public class OrderController {
 		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
 		// 1. JWT에서 사용자 ID 추출
-		UUID currentUserId = userDetails.userId();
+		UUID currentUserId = userDetails.getUserId();
 
 		// 2. 서비스 호출
 		orderService.confirmOrder(orderId, currentUserId);
