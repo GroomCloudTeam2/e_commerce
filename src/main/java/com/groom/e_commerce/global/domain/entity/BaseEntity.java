@@ -14,12 +14,12 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+@lombok.experimental.SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-@lombok.experimental.SuperBuilder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BaseEntity {
 
 	@CreatedDate
