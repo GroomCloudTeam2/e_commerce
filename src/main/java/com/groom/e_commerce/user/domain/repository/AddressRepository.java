@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.groom.e_commerce.user.domain.entity.AddressEntity;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
 
 @Repository
 public interface AddressRepository extends JpaRepository<AddressEntity, UUID> {
@@ -19,9 +19,9 @@ public interface AddressRepository extends JpaRepository<AddressEntity, UUID> {
 
 	Optional<AddressEntity> findByAddressIdAndUserUserId(UUID addressId, UUID userId);
 
-    Optional<AddressEntity> findByUserUserIdAndIsDefaultTrue(UUID userId);
+	Optional<AddressEntity> findByUserUserIdAndIsDefaultTrue(UUID userId);
 
-    @Modifying
+	@Modifying
 	@Query("UPDATE AddressEntity a SET a.isDefault = false WHERE a.user.userId = :userId AND a.isDefault = true")
 	void clearDefaultAddress(@Param("userId") UUID userId);
 }

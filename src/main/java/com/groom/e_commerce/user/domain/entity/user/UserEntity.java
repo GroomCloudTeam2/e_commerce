@@ -1,10 +1,11 @@
-package com.groom.e_commerce.user.domain.entity;
+package com.groom.e_commerce.user.domain.entity.user;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
+import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -63,8 +64,7 @@ public class UserEntity extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", length = 20, nullable = false)
-	@Builder.Default
-	private UserStatus status = UserStatus.ACTIVE;
+	private UserStatus status;
 
 	// =========================
 	// Relation

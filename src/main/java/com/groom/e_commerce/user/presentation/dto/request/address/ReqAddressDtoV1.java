@@ -1,11 +1,13 @@
-package com.groom.e_commerce.user.presentation.dto.request;
+package com.groom.e_commerce.user.presentation.dto.request.address;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ReqAddressDtoV1 {
 
 	@NotBlank(message = "우편번호는 필수입니다.")

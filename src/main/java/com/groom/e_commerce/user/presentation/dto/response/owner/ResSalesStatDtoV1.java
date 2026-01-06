@@ -1,4 +1,4 @@
-package com.groom.e_commerce.user.presentation.dto.response;
+package com.groom.e_commerce.user.presentation.dto.response.owner;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

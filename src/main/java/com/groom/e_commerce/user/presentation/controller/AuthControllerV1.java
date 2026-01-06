@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.groom.e_commerce.user.application.service.AuthServiceV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqLoginDtoV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqSignupDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResTokenDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqLoginDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqSignupDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResTokenDtoV1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

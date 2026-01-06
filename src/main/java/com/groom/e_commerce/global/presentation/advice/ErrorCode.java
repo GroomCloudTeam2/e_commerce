@@ -41,7 +41,9 @@ public enum ErrorCode {
     STOCK_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "STOCK_NOT_ENOUGH", "재고가 부족합니다."),
     PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "PRODUCT_HAS_ORDERS", "주문이 존재하는 상품은 삭제할 수 없습니다."),
     CATEGORY_HAS_CHILDREN(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_CHILDREN", "하위 카테고리가 존재하여 삭제할 수 없습니다."),
-    CATEGORY_HAS_PRODUCTS(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_PRODUCTS", "등록된 상품이 존재하여 삭제할 수 없습니다.");
+    CATEGORY_HAS_PRODUCTS(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_PRODUCTS", "등록된 상품이 존재하여 삭제할 수 없습니다."),
+    VARIANT_REQUIRED(HttpStatus.BAD_REQUEST, "VARIANT_REQUIRED", "옵션 상품은 variantId가 필요합니다."),
+    VARIANT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "VARIANT_NOT_ALLOWED", "옵션이 없는 상품에는 variantId를 보낼 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
