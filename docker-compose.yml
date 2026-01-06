@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15-alpine  # 가볍고 많이 쓰는 버전
+    container_name: local-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password  # 비밀번호 (자유롭게 변경 가능)
+      POSTGRES_DB: ecommerce # 데이터베이스 이름
