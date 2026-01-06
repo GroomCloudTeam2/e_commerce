@@ -90,7 +90,7 @@ public class AdminControllerV1 {
 
 	// ==================== Seller 승인 관리 ====================
 
-	@Operation(summary = "승인 대기 중인 Onwer 목록 조회 (Manager)")
+	@Operation(summary = "승인 대기 중인 Owner 목록 조회 (Manager)")
 	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
 	@GetMapping("/owners/pending")
 	public ResponseEntity<ResOwnerApprovalListDtoV1> getPendingOwnerList(
