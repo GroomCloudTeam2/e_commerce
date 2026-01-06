@@ -35,22 +35,27 @@ src
    │              │  ├─ entity
    │              │  │  ├─ Payment.java            # 주문 1건에 대한 결제 엔티티 (READY/PAID/CANCELED)
    │              │  │  └─ PaymentCancel.java      # 결제 취소 이력 엔티티 (부분/전체 취소)
+   │              │  │  └─ PaymentSplit.java       # 주문상품 단위 결제 분할 엔티티(정산/부분취소 기준 라인)
    │              │  ├─ model
    │              │  │  ├─ PaymentMethod.java      # 결제 수단 Enum
+   │              │  │  ├─ PaymentSplitStatus.java # 결제 분할(PaymentSplit) 상태 Enum (ACTIVE/CANCELED 등)
    │              │  │  └─ PaymentStatus.java      # 결제 상태 Enum
    │              │  └─ repository
-   │              │     └─ PaymentRepository.java  # 결제 도메인 Repository 인터페이스
+   │              │     └─ PaymentRepository.java        # 결제 도메인 Repository 인터페이스
+   │              │     └─ PaymentSplitRepository.java   # 결제 분할(PaymentSplit) Repository 인터페이스
    │              │
    │              ├─ infrastructure                # 외부 시스템 연동 및 구현 영역
+   │              │  ├─ adapter.in
+   │              │  │  └─ PaymentPortAdapter.java # 주문 도메인의 PaymentPort를 구현해 결제 부분취소 요청을 수신/위임
    │              │  ├─ api
    │              │  │  └─ toss                    # 토스페이먼츠 API 연동
    │              │  │     ├─ adapter
-   │              │  │     │  └─ TossPaymentAdapter.java   # 토스 결제 API 어댑터 (Port 구현체)
+   │              │  │     │  └─ TossPaymentAdapter.java   # TossPaymentPort 구현체(토스 API 호출 위임)
    │              │  │     ├─ config
    │              │  │     │  ├─ TossWebClientConfig.java  # 토스 API 호출용 WebClient 설정
    │              │  │     │  └─ TossPaymentsProperties.java # 토스 결제 환경설정 바인딩
    │              │  │     ├─ client
-   │              │  │     │  └─ TossPaymentsClient.java   # 토스페이먼츠 REST API 호출 클라이언트
+   │              │  │     │  └─ TossPaymentsClient.java   # 토스페이먼츠 REST API 호출 클라이언트(WebClient 래퍼)
    │              │  │     └─ dto
    │              │  │        ├─ request
    │              │  │        │  ├─ TossConfirmRequest.java # 토스 결제 승인 요청 DTO
@@ -61,42 +66,49 @@ src
    │              │  │           └─ TossErrorResponse.java   # 토스 API 에러 응답 DTO
    │              │  │
    │              │  ├─ repository
-   │              │  │  └─ PaymentRepositoryImpl.java       # PaymentRepository JPA 구현체
+   │              │  │  └─ PaymentRepositoryImpl.java        # PaymentRepository 구현체(EntityManager/JPA)
+   │              │  │  └─ PaymentSplitJpaRepository.java    # PaymentSplit 조회용 Spring Data JPA 레포지토리(락 조회 포함)
+   │              │  │  └─ PaymentSplitRepositoryImpl.java   # PaymentSplitRepository 구현체(EntityManager 기반, 락 조회 지원)
    │              │  └─ stub
-   │              │     └─ StubOrderQueryAdapter.java       # 주문 도메인 미구현 시 테스트용 스텁
+   │              │     └─ StubOrderQueryAdapter.java        # 주문 도메인 미구현 시 주문조회(OrderQueryPort) 테스트용 스텁
    │              │
-   │              ├─ application                  # 결제 유스케이스 및 서비스 계층
+   │              ├─ application                   # 결제 유스케이스 및 서비스 계층
    │              │  ├─ port
-   │              │  │  ├─ in                     # 인바운드 유스케이스 인터페이스
-   │              │  │  │  ├─ ConfirmPaymentUseCase.java # 결제 승인 유스케이스
-   │              │  │  │  ├─ CancelPaymentUseCase.java  # 결제 취소 유스케이스
-   │              │  │  │  ├─ GetPaymentUseCase.java     # 결제 조회 유스케이스
-   │              │  │  │  └─ ReadyPaymentUseCase.java   # 결제 준비 유스케이스
-   │              │  │  └─ out                    # 아웃바운드 포트
-   │              │  │     ├─ OrderQueryPort.java # 주문 도메인 조회 포트
-   │              │  │     └─ TossPaymentPort.java # 토스페이먼츠 연동 포트
+   │              │  │  ├─ in                      # 인바운드 유스케이스 인터페이스
+   │              │  │  │  ├─ CancelOrderItemPaymentUseCase.java # 주문상품 단위 부분취소 유스케이스
+   │              │  │  │  ├─ ConfirmPaymentUseCase.java         # 결제 승인 유스케이스
+   │              │  │  │  ├─ CancelPaymentUseCase.java          # 결제 취소 유스케이스(전액/부분)
+   │              │  │  │  ├─ GetPaymentUseCase.java             # 결제 조회 유스케이스
+   │              │  │  │  └─ ReadyPaymentUseCase.java           # 결제 준비(READY) 유스케이스
+   │              │  │  └─ out                     # 아웃바운드 포트
+   │              │  │     ├─ OrderItemSnapshot.java # 주문상품 스냅샷 DTO(결제 split 생성/검증에 사용)
+   │              │  │     ├─ OrderQueryPort.java     # 주문 도메인 조회 포트(주문 요약/주문상품 조회)
+   │              │  │     ├─ OrderStatePort.java     # 주문 상태 변경 포트(PENDING→PAID 등 상태 전이)
+   │              │  │     └─ TossPaymentPort.java    # 토스페이먼츠 연동 포트(승인/취소)
    │              │  │
    │              │  └─ service
-   │              │     ├─ PaymentCommandService.java # 결제 상태 변경(READY/CONFIRM/CANCEL) 로직
+   │              │     ├─ PaymentCommandService.java # 결제 커맨드 로직(READY/CONFIRM/CANCEL/부분취소 상태 변경)
    │              │     └─ PaymentQueryService.java   # 결제 조회 전용 로직
    │              │
-   │              └─ presentation                # 외부 요청 처리(API 계층)
+   │              └─ presentation                 # 외부 요청 처리(API 계층)
    │                 ├─ controller
-   │                 │  ├─ PaymentControllerV1.java      # 결제 REST API 컨트롤러
-   │                 │  └─ PaymentRedirectController.java # 토스 결제 결과 리다이렉트 처리
+   │                 │  ├─ PaymentCancelItemControllerV1.java  # 주문상품 단위 부분취소 API 컨트롤러
+   │                 │  ├─ PaymentControllerV1.java            # 결제 REST API 컨트롤러(ready/confirm/cancel 등)
+   │                 │  └─ PaymentRedirectController.java      # 토스 결제 결과 리다이렉트 처리(성공/실패 URL)
    │                 ├─ dto
    │                 │  ├─ request
-   │                 │  │  ├─ ReqConfirmPaymentV1.java # 결제 승인 요청 DTO
-   │                 │  │  ├─ ReqCancelPaymentV1.java  # 결제 취소 요청 DTO
-   │                 │  │  └─ ReqReadyPaymentV1.java   # 결제 준비 요청 DTO
+   │                 │  │  ├─ ReqCancelOrderItemPaymentV1.java  # 주문상품 단위 부분취소 요청 DTO
+   │                 │  │  ├─ ReqConfirmPaymentV1.java          # 결제 승인 요청 DTO
+   │                 │  │  ├─ ReqCancelPaymentV1.java           # 결제 취소 요청 DTO
+   │                 │  │  └─ ReqReadyPaymentV1.java            # 결제 준비 요청 DTO
    │                 │  └─ response
    │                 │     ├─ ResPaymentV1.java        # 결제 승인 응답 DTO
-   │                 │     ├─ ResCancelResultV1.java   # 결제 취소 응답 DTO
+   │                 │     ├─ ResCancelResultV1.java   # 결제 취소/부분취소 결과 응답 DTO
    │                 │     ├─ ResErrorV1.java          # 결제 공통 에러 응답 DTO
    │                 │     └─ ResReadyPaymentV1.java   # 결제 준비 응답 DTO
    │                 └─ exception
-   │                    ├─ PaymentException.java       # 결제 도메인 비즈니스 예외
-   │                    └─ TossApiException.java       # 토스 API 호출 예외
+   │                    ├─ PaymentException.java      # 결제 도메인 비즈니스 예외(상태/금액 검증 실패 등)
+   │                    └─ TossApiException.java      # 토스 API 호출 예외(외부 PG 오류 매핑)
    │
    └─ resources
       ├─ static
