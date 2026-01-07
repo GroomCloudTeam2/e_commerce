@@ -3,12 +3,12 @@ package com.groom.e_commerce.product.domain.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.math.BigDecimal;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.product.domain.enums.VariantStatus;
 
 class ProductVariantTest {
@@ -23,7 +23,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(10)
 				.build();
 
@@ -41,7 +41,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(10)
 				.build();
 
@@ -59,14 +59,14 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(5)
 				.build();
 
 			// when & then
 			assertThatThrownBy(() -> variant.decreaseStock(10))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessage("재고가 부족합니다.");
+				.isInstanceOf(CustomException.class)
+				.satisfies(e -> assertThat(((CustomException) e).getErrorCode()).isEqualTo(ErrorCode.STOCK_NOT_ENOUGH));
 		}
 	}
 
@@ -80,7 +80,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(5)
 				.build();
 
@@ -97,7 +97,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(5)
 				.build();
 			variant.decreaseStock(5); // SOLD_OUT 상태로 만들기
@@ -122,7 +122,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(10)
 				.build();
 
@@ -145,16 +145,16 @@ class ProductVariantTest {
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
 				.optionName("빨강/M")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(10)
 				.build();
 
 			// when
-			variant.update("파랑/L", Long.valueOf(15000), 20);
+			variant.update("파랑/L", 15000L, 20);
 
 			// then
 			assertThat(variant.getOptionName()).isEqualTo("파랑/L");
-			assertThat(variant.getPrice()).isEqualByComparingTo(Long.valueOf(15000));
+			assertThat(variant.getPrice()).isEqualTo(15000L);
 			assertThat(variant.getStockQuantity()).isEqualTo(20);
 		}
 
@@ -165,7 +165,7 @@ class ProductVariantTest {
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
 				.optionName("빨강/M")
-				.price(Long.valueOf(10000))
+				.price(10000L)
 				.stockQuantity(10)
 				.build();
 
@@ -174,7 +174,7 @@ class ProductVariantTest {
 
 			// then
 			assertThat(variant.getOptionName()).isEqualTo("빨강/M");
-			assertThat(variant.getPrice()).isEqualByComparingTo(Long.valueOf(10000));
+			assertThat(variant.getPrice()).isEqualTo(10000L);
 			assertThat(variant.getStockQuantity()).isEqualTo(10);
 		}
 	}

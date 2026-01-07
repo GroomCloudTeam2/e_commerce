@@ -6,7 +6,13 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+	"spring.datasource.driver-class-name=org.postgresql.Driver",
+	"spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect",
+	"spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect",
+	"spring.jpa.hibernate.ddl-auto=create-drop",
+	"spring.datasource.url=jdbc:postgresql://localhost:5432/test_db" // DynamicPropertySource가 덮어쓸 더미 값
+})
 @Testcontainers
 public abstract class IntegrationTestSupport {
 
@@ -25,6 +31,5 @@ public abstract class IntegrationTestSupport {
 		registry.add("spring.datasource.url", POSTGRESQL_CONTAINER::getJdbcUrl);
 		registry.add("spring.datasource.username", POSTGRESQL_CONTAINER::getUsername);
 		registry.add("spring.datasource.password", POSTGRESQL_CONTAINER::getPassword);
-		registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
 	}
 }
