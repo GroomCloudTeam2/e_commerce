@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreateItemRequest {
+public class OrderCreateItemRequest{
         private UUID productId;
         private UUID variantId;
 		private Integer quantity;

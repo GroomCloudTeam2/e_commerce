@@ -324,7 +324,7 @@ public class ProductServiceV1 {
 	/**
 	 * 장바구니 목록 조회를 위한 상품 정보 Bulk 조회
 	 */
-	public List<ProductCartInfo> getProductCartInfos(List<StockManagement> items) {
+	public List<ProductCartInfo> getProductCartInfos(List<? extends StockManagement> items) {
 		if (items == null || items.isEmpty()) {
 			return new ArrayList<>();
 		}

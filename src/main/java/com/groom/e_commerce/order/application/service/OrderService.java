@@ -31,6 +31,7 @@ import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.entity.ProductVariant;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
+import com.groom.e_commerce.cart.application.CartService;
 
 import com.groom.e_commerce.product.application.service.ProductServiceV1;
 import com.groom.e_commerce.product.application.dto.StockManagement;
@@ -54,6 +55,7 @@ public class OrderService {
 
 	private final PaymentRepository paymentRepository;
 	private final ProductServiceV1 productServiceV1;
+	private final CartService cartService;
 
 	/**
 	 * 주문 생성 (핵심 비즈니스 로직)
@@ -67,7 +69,8 @@ public class OrderService {
 			.map(item -> StockManagement.of(
 				item.getProductId(),
 				item.getVariantId(),
-				item.getQuantity()))
+				item.getQuantity()
+			))
 			.toList();
 		productServiceV1.decreaseStockBulk(stockManagements);
 
@@ -141,6 +144,9 @@ public class OrderService {
 
 		paymentRepository.save(payment);
 
+		if (request.getFromCartItemsIds() != null && !request.getFromCartItemsIds().isEmpty()) {
+			cartService.removeCartItems(buyerId, request.getFromCartItemsIds());
+		}
 		return order.getOrderId();
 	}
 
@@ -156,6 +162,15 @@ public class OrderService {
 			.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. ID: " + orderId));
 
 		return OrderResponse.from(order);
+	}
+	public List<OrderResponse> getOrdersByProduct(UUID productId) {
+		// 1. 리포지토리 호출
+		List<Order> orders = orderRepository.findAllByProductId(productId);
+
+		// 2. Entity -> DTO 변환 (Stream 활용)
+		return orders.stream()
+			.map(OrderResponse::from) // 이미 구현된 from 메서드 재사용
+			.collect(Collectors.toList());
 	}
 
 	/**
@@ -175,14 +190,11 @@ public class OrderService {
 
 		// 3. 재고 복구 요청 (Product Service 연동)
 		List<StockManagement> stockManagements = order.getItem().stream()
-		         .map(orderItem -> StockManagement.of(
-			             orderItem.getProductId(),
-			             orderItem.getVariantId(),
-			             orderItem.getQuantity()))
-				 .toList();
+			.map(OrderItem::toStockManagement) // 변환!
+			.toList();
 
-		     // 한 번만 호출
-		     productServiceV1.increaseStockBulk(stockManagements);
+		// 한 번만 호출
+		productServiceV1.increaseStockBulk(stockManagements);
 
 
 		// 4. (선택) 결제 취소 로직
@@ -247,16 +259,5 @@ public class OrderService {
 		}
 	}
 
-	// 👇 [임시] 파일 하나로 해결하기 위해 내부에 만든 가짜 DTO 클래스
-	@Getter
-	@Builder
-	static class MockProductResponse {
-		private UUID productId;
-		private UUID ownerId;
-		private String name;
-		private String thumbnail;
-		private String optionName;
-		private Long price;
-	}
 
 }

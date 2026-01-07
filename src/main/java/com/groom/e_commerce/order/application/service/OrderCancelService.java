@@ -52,12 +52,11 @@ public class OrderCancelService {
 
 		// // 5. 후처리 (결제 취소 성공 시 실행됨)
 		items.forEach(OrderItem::cancel);
+
 		List<StockManagement> stockManagements = items.stream()
-			.map(item -> StockManagement.of(
-				item.getProductId(),
-				item.getVariantId(),
-				item.getQuantity()))
+			.map(OrderItem::toStockManagement) // OrderItem 내부의 변환 메서드 호출
 			.toList();
+
 		productServiceV1.increaseStockBulk(stockManagements);
 
 		// (선택) 주문 전체 취소 동기화 로직은 여기에 추가
