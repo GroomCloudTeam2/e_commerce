@@ -31,5 +31,7 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, UUID> {
 		ReviewCategory category,
 		Pageable pageable
 	);
+	Page<ReviewEntity> findByUserId(UUID userId, Pageable pageable);
+
 
 }

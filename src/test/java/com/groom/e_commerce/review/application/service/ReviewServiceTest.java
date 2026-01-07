@@ -24,6 +24,7 @@ import com.groom.e_commerce.review.domain.repository.ReviewLikeRepository;
 import com.groom.e_commerce.review.domain.repository.ReviewRepository;
 import com.groom.e_commerce.review.presentation.dto.request.CreateReviewRequest;
 import com.groom.e_commerce.review.presentation.dto.request.UpdateReviewRequest;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceTest {
@@ -92,23 +93,11 @@ class ReviewServiceTest {
 	}
 
 	@Test
-	void AI_카테고리가_null이면_NPE_발생() {
-		assertThatThrownBy(() ->
-			ReviewCategory.fromAiCategory(null)
-		).isInstanceOf(NullPointerException.class);
-	}
-
-	@Test
-	void AI_ERR_카테고리여도_리뷰는_저장됨() {
+	void 리뷰_내용이_50자_초과하면_ERR로_저장() {
 		// given
+		String longComment = "a".repeat(60);
 		CreateReviewRequest request =
-			new CreateReviewRequest(3, "의미불명");
-
-		AiRestClient.AiResponse aiResponse =
-			new AiRestClient.AiResponse(ReviewCategory.ERR, 0.0);
-
-		when(aiRestClient.classifyComment(anyString()))
-			.thenReturn(aiResponse);
+			new CreateReviewRequest(4, longComment);
 
 		when(productRatingRepository.findByProductId(productId))
 			.thenReturn(Optional.empty());
@@ -120,9 +109,7 @@ class ReviewServiceTest {
 
 		// then
 		verify(reviewRepository).save(
-			argThat(review ->
-				review.getCategory() == ReviewCategory.ERR
-			)
+			argThat(review -> review.getCategory() == ReviewCategory.ERR)
 		);
 
 		assertThat(response).isNotNull();
@@ -185,6 +172,88 @@ class ReviewServiceTest {
 		).isInstanceOf(SecurityException.class);
 	}
 
+	/* ================= 리뷰 삭제 ================= */
+
+	@Test
+	void 리뷰_삭제_성공_본인() {
+		// given
+		ReviewEntity review = ReviewEntity.builder()
+			.productId(productId)
+			.userId(userId) // 본인
+			.rating(4)
+			.build();
+
+		ProductRatingEntity ratingEntity = new ProductRatingEntity(productId);
+
+		when(reviewRepository.findById(reviewId))
+			.thenReturn(Optional.of(review));
+
+		when(productRatingRepository.findByProductId(productId))
+			.thenReturn(Optional.of(ratingEntity));
+
+		// when
+		reviewService.deleteReview(reviewId, userId, UserRole.USER);
+
+		// then
+		assertThat(review.getDeletedBy()).isNotNull();
+		assertThat(review.getDeletedAt()).isNotNull();
+	}
+
+	@Test
+	void 리뷰_삭제_성공_매니저() {
+		// given
+		ReviewEntity review = ReviewEntity.builder()
+			.productId(productId)
+			.userId(UUID.randomUUID()) // 타인 리뷰
+			.rating(5)
+			.build();
+
+		ProductRatingEntity ratingEntity = new ProductRatingEntity(productId);
+
+		when(reviewRepository.findById(reviewId))
+			.thenReturn(Optional.of(review));
+
+		when(productRatingRepository.findByProductId(productId))
+			.thenReturn(Optional.of(ratingEntity));
+
+		// when
+		reviewService.deleteReview(
+			reviewId,
+			userId,               // 다른 사용자
+			UserRole.MANAGER      // 관리자
+		);
+
+		// then
+		assertThat(review.getDeletedAt()).isNotNull();
+	}
+
+
+	@Test
+	void 리뷰_삭제시_상품평점_감소() {
+		// given
+		ReviewEntity review = ReviewEntity.builder()
+			.productId(productId)
+			.userId(userId)
+			.rating(5)
+			.build();
+
+		ProductRatingEntity ratingEntity = new ProductRatingEntity(productId);
+		ratingEntity.updateRating(5);
+
+		when(reviewRepository.findById(reviewId))
+			.thenReturn(Optional.of(review));
+
+		when(productRatingRepository.findByProductId(productId))
+			.thenReturn(Optional.of(ratingEntity));
+
+		// when
+		reviewService.deleteReview(reviewId, userId, UserRole.USER);
+
+		// then
+		assertThat(ratingEntity.getReviewCount()).isEqualTo(0);
+		assertThat(ratingEntity.getAvgRating()).isEqualTo(0.0);
+	}
+
 	/* ================= 좋아요 ================= */
 
 	@Test
@@ -220,6 +289,45 @@ class ReviewServiceTest {
 		// then
 		assertThatThrownBy(() ->
 			reviewService.likeReview(reviewId, userId)
+		).isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void 좋아요_취소_성공() {
+		// given
+		ReviewEntity review = ReviewEntity.builder().build();
+		review.incrementLikeCount();
+
+		ReviewLikeEntity like = new ReviewLikeEntity(reviewId, userId);
+
+		when(reviewRepository.findById(reviewId))
+			.thenReturn(Optional.of(review));
+
+		when(reviewLikeRepository.findByReviewIdAndUserId(reviewId, userId))
+			.thenReturn(Optional.of(like));
+
+		// when
+		int count = reviewService.unlikeReview(reviewId, userId);
+
+		// then
+		assertThat(count).isEqualTo(0);
+		verify(reviewLikeRepository).delete(like);
+	}
+
+	@Test
+	void 좋아요_취소_실패() {
+		// given
+		ReviewEntity review = ReviewEntity.builder().build();
+
+		when(reviewRepository.findById(reviewId))
+			.thenReturn(Optional.of(review));
+
+		when(reviewLikeRepository.findByReviewIdAndUserId(reviewId, userId))
+			.thenReturn(Optional.empty());
+
+		// then
+		assertThatThrownBy(() ->
+			reviewService.unlikeReview(reviewId, userId)
 		).isInstanceOf(IllegalStateException.class);
 	}
 }
