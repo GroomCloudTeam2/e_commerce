@@ -32,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Admin", description = "관리자 API")
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
 public class AdminControllerV1 {
 
