@@ -17,6 +17,7 @@ import com.groom.e_commerce.cart.domain.repository.CartItemRepository;
 import com.groom.e_commerce.cart.domain.repository.CartRepository;
 import com.groom.e_commerce.cart.presentation.dto.request.CartAddRequest;
 import com.groom.e_commerce.cart.presentation.dto.response.CartItemResponse;
+import com.groom.e_commerce.product.application.dto.StockManagement;
 import com.groom.e_commerce.product.application.service.ProductServiceV1;
 import com.groom.e_commerce.product.application.dto.ProductCartInfo;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
@@ -35,7 +36,13 @@ public class CartService {
 
 	public void addItemToCart(UUID userId, CartAddRequest request) {
 		// 0. 상품 정보 조회 및 검증
-		List<ProductCartInfo> productInfos = productService.getProductCartInfos(List.of(request));
+		StockManagement stockInfo = StockManagement.of(
+			request.getProductId(),
+			request.getVariantId(),
+			request.getQuantity()
+		);
+
+		List<ProductCartInfo> productInfos = productService.getProductCartInfos(List.of(stockInfo));
 
 		if (productInfos.isEmpty()) {
 			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -85,13 +92,14 @@ public class CartService {
 
 		// 1. 내 장바구니의 모든 아이템 ID 리스트 가져오기
 		List<CartItem> cartItems = cartItemRepository.findAllByCart(cart);
+
 		if (cartItems.isEmpty()) {
 			return List.of();
 		}
-
-		// 2. Product 서비스에 Bulk 조회 요청 (N+1 문제 해결)
-		// CartItem이 StockManagement를 구현하고 있으므로 바로 전달 가능
-		List<ProductCartInfo> productInfos = productService.getProductCartInfos(cartItems);
+		List<StockManagement> stockInfos = cartItems.stream()
+			.map(CartItem::toStockManagement) // DTO로 변환!
+			.toList();
+		List<ProductCartInfo> productInfos = productService.getProductCartInfos(stockInfos);
 
 		// 3. 매핑을 위해 Map으로 변환 (Key: productId + variantId)
 		Map<String, ProductCartInfo> infoMap = productInfos.stream()
@@ -117,7 +125,7 @@ public class CartService {
 					.thumbnailUrl(info.getThumbnailUrl())
 					.price(info.getPrice())
 					.quantity(item.getQuantity())
-					.totalPrice(info.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+					.totalPrice(info.getPrice() * item.getQuantity())
 					.stockQuantity(info.getStockQuantity())
 					.isAvailable(info.isAvailable())
 					.build();
@@ -147,7 +155,9 @@ public class CartService {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
-		List<ProductCartInfo> productInfos = productService.getProductCartInfos(List.of(item));
+		List<ProductCartInfo> productInfos = productService.getProductCartInfos(
+			List.of(item.toStockManagement())
+		);
 
 		if (productInfos.isEmpty()) {
 			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -176,12 +186,22 @@ public class CartService {
 		cartItemRepository.delete(item);
 	}
 
-	// public void clearCart(UUID userId) {
-	// 	Cart cart = cartRepository.findByUserId(userId)
-	// 		.orElseThrow(() -> new CustomException(ErrorCode.CART_NOT_FOUND));
-	//
-	// 	// CartItemRepository에 deleteAllByCart 메서드가 필요할 수 있음
-	// 	// 또는 cart.getItems().clear() 후 Dirty Checking 활용 (Cascade 설정 필요)
-	// 	cartItemRepository.deleteAll(cart.getItems());
-	// }
+	public void removeCartItems(UUID userId, List<UUID> itemIds) {
+		if (itemIds == null || itemIds.isEmpty()) {
+			return;
+		}
+
+		// 1. 삭제할 아이템들을 한 번에 조회
+		List<CartItem> items = cartItemRepository.findAllById(itemIds);
+
+		// 2. 본인의 장바구니 아이템인지 검증 (보안)
+		items.forEach(item -> {
+			if (!item.getCart().getUserId().equals(userId)) {
+				throw new CustomException(ErrorCode.ACCESS_DENIED);
+			}
+		});
+
+		// 3. 일괄 삭제 (쿼리 최적화)
+		cartItemRepository.deleteAll(items);
+	}
 }

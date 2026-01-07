@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "p_cart_item")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CartItem extends BaseEntity implements StockManagement {
+public class CartItem extends BaseEntity{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -52,6 +52,10 @@ public class CartItem extends BaseEntity implements StockManagement {
 		this.variantId = variantId;
 		this.quantity = quantity;
 	}
+	public StockManagement toStockManagement() {
+		return StockManagement.of(this.productId, this.variantId, this.quantity);
+	}
+
 	public void updateQuantity(int quantity) {
 		this.quantity = quantity;
 	}

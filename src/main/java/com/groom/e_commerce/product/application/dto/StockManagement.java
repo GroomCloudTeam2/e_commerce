@@ -6,13 +6,17 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class StockManagement {
 
-public interface StockManagement {
-	UUID getProductId();
-	UUID getVariantId();
-	Integer getQuantity();
+	private UUID productId;
+	private UUID variantId;
+	private int quantity;
 
-
+	public static StockManagement of(UUID productId, UUID variantId, int quantity) {
+		return new StockManagement(productId, variantId, quantity);
+	}
 }

@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartAddRequest implements StockManagement {
+public class CartAddRequest {
 
 	@NotNull
 	private UUID productId;

@@ -20,4 +20,5 @@ public class OrderCreateRequest {
 
 	// 주문 상품 목록
 	private List<OrderCreateItemRequest> items;
+	private List<UUID> fromCartItemsIds;
 }

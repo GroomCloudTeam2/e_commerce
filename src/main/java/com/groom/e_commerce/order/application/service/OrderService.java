@@ -31,6 +31,7 @@ import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.entity.ProductVariant;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
+import com.groom.e_commerce.cart.application.CartService;
 
 import com.groom.e_commerce.product.application.service.ProductServiceV1;
 import com.groom.e_commerce.product.application.dto.StockManagement;
@@ -54,6 +55,7 @@ public class OrderService {
 
 	private final PaymentRepository paymentRepository;
 	private final ProductServiceV1 productServiceV1;
+	private final CartService cartService;
 
 	/**
 	 * 주문 생성 (핵심 비즈니스 로직)
@@ -67,7 +69,8 @@ public class OrderService {
 			.map(item -> StockManagement.of(
 				item.getProductId(),
 				item.getVariantId(),
-				item.getQuantity()))
+				item.getQuantity()
+			))
 			.toList();
 		productServiceV1.decreaseStockBulk(stockManagements);
 
@@ -141,6 +144,9 @@ public class OrderService {
 
 		paymentRepository.save(payment);
 
+		if (request.getFromCartItemsIds() != null && !request.getFromCartItemsIds().isEmpty()) {
+			cartService.removeCartItems(buyerId, request.getFromCartItemsIds());
+		}
 		return order.getOrderId();
 	}
 
@@ -175,14 +181,11 @@ public class OrderService {
 
 		// 3. 재고 복구 요청 (Product Service 연동)
 		List<StockManagement> stockManagements = order.getItem().stream()
-		         .map(orderItem -> StockManagement.of(
-			             orderItem.getProductId(),
-			             orderItem.getVariantId(),
-			             orderItem.getQuantity()))
-				 .toList();
+			.map(OrderItem::toStockManagement) // 변환!
+			.toList();
 
-		     // 한 번만 호출
-		     productServiceV1.increaseStockBulk(stockManagements);
+		// 한 번만 호출
+		productServiceV1.increaseStockBulk(stockManagements);
 
 
 		// 4. (선택) 결제 취소 로직
