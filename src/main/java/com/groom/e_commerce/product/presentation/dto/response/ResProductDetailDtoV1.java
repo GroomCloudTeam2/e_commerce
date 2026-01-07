@@ -28,6 +28,7 @@ public class ResProductDetailDtoV1 {
 	private String title;
 	private String description;
 	private String thumbnailUrl;
+	private BigDecimal price;
 	private ProductStatus status;
 	private Boolean hasOptions;
 
@@ -175,6 +176,7 @@ public class ResProductDetailDtoV1 {
 			.title(product.getTitle())
 			.description(product.getDescription())
 			.thumbnailUrl(product.getThumbnailUrl())
+			.price(product.getPrice())
 			.status(product.getStatus())
 			.hasOptions(product.getHasOptions())
 			.category(CategoryInfo.from(product.getCategory()))

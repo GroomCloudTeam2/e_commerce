@@ -121,13 +121,15 @@ public class ProductServiceV1 {
 
 			for (ReqProductCreateDtoV1.VariantRequest variantReq : request.getVariants()) {
 				// SKU 코드 중복 검사
-				if (variantReq.getSkuCode() != null && productVariantRepository.existsBySkuCode(variantReq.getSkuCode())) {
+				if (variantReq.getSkuCode() != null && productVariantRepository.existsBySkuCode(
+					variantReq.getSkuCode())) {
 					throw new CustomException(ErrorCode.DUPLICATE_SKU_CODE);
 				}
 
 				// optionValueIndexes를 실제 ID로 변환
 				List<UUID> optionValueIds = new ArrayList<>();
-				String optionName = buildOptionName(variantReq.getOptionValueIndexes(), savedOptionValueIdsList, savedProduct.getOptions(), optionValueIds);
+				String optionName = buildOptionName(variantReq.getOptionValueIndexes(), savedOptionValueIdsList,
+					savedProduct.getOptions(), optionValueIds);
 
 				ProductVariant variant = ProductVariant.builder()
 					.product(savedProduct)
@@ -345,7 +347,7 @@ public class ProductServiceV1 {
 		Map<UUID, ProductVariant> variantMap = variantIds.isEmpty()
 			? Map.of()
 			: productVariantRepository.findByIdIn(new ArrayList<>(variantIds)).stream()
-				.collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
+			.collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
 
 		// 3. DTO 변환 및 로직 적용
 		List<ProductCartInfo> result = new ArrayList<>();
@@ -386,7 +388,7 @@ public class ProductServiceV1 {
 			// 옵션 상품 차감
 			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
 				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-			
+
 			variant.decreaseStock(quantity);
 		} else {
 			// 단일 상품 차감
@@ -419,7 +421,7 @@ public class ProductServiceV1 {
 		if (variantId != null) {
 			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
 				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-			
+
 			variant.increaseStock(quantity);
 		} else {
 			Product product = productRepository.findByIdWithLock(productId)
@@ -441,5 +443,10 @@ public class ProductServiceV1 {
 		for (StockManagement item : items) {
 			increaseStock(item.getProductId(), item.getVariantId(), item.getQuantity());
 		}
+	}
+
+	public ProductVariant findVariantById(UUID variantId) {
+		return productVariantRepository.findById(variantId)
+			.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
 	}
 }

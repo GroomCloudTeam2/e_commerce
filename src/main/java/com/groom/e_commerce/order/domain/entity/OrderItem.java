@@ -81,7 +81,7 @@ public class OrderItem extends BaseEntity {
 		this.optionName = optionName;
 		this.unitPrice = unitPrice;
 		this.quantity = quantity;
-		this.subtotal = unitPrice * quantity;
+		this.subtotal = unitPrice*quantity;
 		this.itemStatus = OrderStatus.PENDING;
 	}
 

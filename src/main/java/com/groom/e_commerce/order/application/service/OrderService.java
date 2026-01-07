@@ -1,13 +1,14 @@
 package com.groom.e_commerce.order.application.service;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -25,11 +26,18 @@ import com.groom.e_commerce.order.presentation.dto.response.OrderResponse;
 import com.groom.e_commerce.payment.domain.entity.Payment;
 import com.groom.e_commerce.payment.domain.model.PaymentStatus;
 import com.groom.e_commerce.payment.domain.repository.PaymentRepository;
+import com.groom.e_commerce.product.domain.entity.Product;
+import com.groom.e_commerce.product.domain.entity.ProductVariant;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResAddressDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
+import com.groom.e_commerce.product.application.service.ProductServiceV1;
+import com.groom.e_commerce.product.application.dto.StockManagement;
+import com.groom.e_commerce.product.application.dto.ProductCartInfo;
+import com.groom.e_commerce.product.presentation.dto.response.ResProductDtoV1;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 
+import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -44,9 +52,7 @@ public class OrderService {
 	private final AddressServiceV1 addressService;
 
 	private final PaymentRepository paymentRepository;
-	// MSA 핵심: Repository가 아니라 Service(또는 Client)를 주입받음
-	// private final ProductService productService;
-	// private final AddressService addressService;
+	private final ProductServiceV1 productServiceV1;
 
 	/**
 	 * 주문 생성 (핵심 비즈니스 로직)
@@ -56,9 +62,17 @@ public class OrderService {
 
 
 		ResAddressDtoV1 addressInfo = addressService.getAddress(request.getAddressId(), buyerId);
+
+		List<StockManagement> stockManagements = request.getItems().stream()
+			.map(item -> StockManagement.of(
+				item.getProductId(),
+				item.getVariantId(),
+				item.getQuantity()))
+			.toList();
+		productServiceV1.decreaseStockBulk(stockManagements);
+
 		// 2. 주문번호 생성
 		String orderNumber = generateOrderNumber();
-
 		// 3. 주문(Order) 엔티티 생성
 		Order order = Order.builder()
 			.buyerId(buyerId)
@@ -68,7 +82,7 @@ public class OrderService {
 			.zipCode(addressInfo.getZipCode())
 			.shippingAddress(addressInfo.getAddress() + " " + addressInfo.getDetailAddress())
 			.shippingMemo("문 앞에 놔주세요") // (이건 request에 필드가 없어서 일단 고정, 필요하면 request에 추가)
-			.totalPaymentAmount(BigInteger.valueOf(0L))
+			.totalPaymentAmount(0L)
 			.build();
 
 		orderRepository.save(order); // 영속화 (ID 생성됨)
@@ -77,35 +91,33 @@ public class OrderService {
 		long totalAmount = 0L;
 		List<OrderItem> orderItems = new ArrayList<>();
 
+		// Bulk 조회
+		List<ProductCartInfo> productInfos = productServiceV1.getProductCartInfos(stockManagements);
+
+		// Map으로 변환 (Key: productId + "_" + variantId)
+		Map<String, ProductCartInfo> productInfoMap = productInfos.stream()
+			.collect(Collectors.toMap(
+				info -> info.getProductId() + "_" + (info.getVariantId() != null ? info.getVariantId() : "null"),
+				Function.identity()
+			));
+
 		for (OrderCreateItemRequest itemReq : request.getItems()) {
+			String key = itemReq.getProductId() + "_" + (itemReq.getVariantId() != null ? itemReq.getVariantId() : "null");
+			ProductCartInfo productInfo = productInfoMap.get(key);
 
-			// 상품 서비스에 정보 요청
-			// ProductResponse productInfo = productService.getProduct(itemReq.getProductId());
-
-			// 👇 [임시] 상품 서비스 대신 가짜 DTO 생성
-			MockProductResponse productInfo = MockProductResponse.builder()
-				.productId(itemReq.getProductId())
-				.ownerId(UUID.randomUUID())
-				.name("테스트 상품 (" + itemReq.getProductId().toString().substring(0, 5) + ")")
-				.thumbnail("http://fake-image.com/img.png")
-				.optionName("기본 옵션")
-				.price(10000L) // 가격 10,000원으로 고정
-				.build();
-
-			// [MSA Point 2] 재고 차감 요청
-			// productService.decreaseStock(itemReq.getProductId(), itemReq.getQuantity());
-			// 👇 [임시] 재고 차감은 그냥 넘어감 (로그만 출력)
-			System.out.println("재고 차감 요청됨: ID=" + itemReq.getProductId() + ", 수량=" + itemReq.getQuantity());
+			if (productInfo == null) {
+				throw new IllegalArgumentException("상품 정보를 찾을 수 없습니다.");
+			}
 
 			// 5. 상품 스냅샷 생성 (OrderItem)
 			OrderItem orderItem = OrderItem.builder()
 				.order(order)
 				.productId(productInfo.getProductId())
-				.variantId(UUID.randomUUID())
+				.variantId(productInfo.getVariantId())
 				.ownerId(productInfo.getOwnerId())
-				.productTitle(productInfo.getName())
-				.productThumbnail(productInfo.getThumbnail())
-				.optionName(productInfo.getOptionName())
+				.productTitle(productInfo.getProductName())
+				.productThumbnail(productInfo.getThumbnailUrl())
+				.optionName(productInfo.getOptionName() != null ? productInfo.getOptionName() : "기본")
 				.unitPrice(productInfo.getPrice())
 				.quantity(itemReq.getQuantity())
 				.build();
@@ -113,7 +125,7 @@ public class OrderService {
 			orderItems.add(orderItem);
 
 			// 총액 합산
-			totalAmount += (productInfo.getPrice() * itemReq.getQuantity());
+			totalAmount = totalAmount + (productInfo.getPrice()*(itemReq.getQuantity()));
 		}
 
 		// 6. OrderItem 일괄 저장
@@ -124,8 +136,7 @@ public class OrderService {
 		Payment payment = Payment.builder()
 			.orderId(order.getOrderId())
 			.amount(totalAmount)
-			.status(PaymentStatus.READY) // 중요: 초기 상태
-			// .paymentKey(null) // 빌더에 따라 생략 가능
+			.status(PaymentStatus.READY)
 			.build();
 
 		paymentRepository.save(payment);
@@ -137,18 +148,6 @@ public class OrderService {
 		String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 		int randomPart = ThreadLocalRandom.current().nextInt(100000, 999999);
 		return datePart + "-" + randomPart;
-	}
-
-	// 👇 [임시] 파일 하나로 해결하기 위해 내부에 만든 가짜 DTO 클래스
-	@Getter
-	@Builder
-	static class MockProductResponse {
-		private UUID productId;
-		private UUID ownerId;
-		private String name;
-		private String thumbnail;
-		private String optionName;
-		private Long price;
 	}
 
 	@Transactional(readOnly = true) // 중요: 조회 전용 트랜잭션 (성능 최적화)
@@ -173,19 +172,20 @@ public class OrderService {
 		// -> Order 상태 변경 & OrderItem 상태 변경 수행됨
 		order.cancel();
 
+
 		// 3. 재고 복구 요청 (Product Service 연동)
 		// OrderItem 리스트를 순회하며 각 상품의 수량만큼 재고를 다시 늘려줍니다.
 		for (OrderItem item : order.getItem()) {
 
 			// 상품 서비스에 재고 증가(복구) 요청
-			// productService.increaseStock(item.getProductId(), item.getQuantity());
 
-			// 👇 [임시] 상품 서비스 대신 로그 출력 (Mocking)(나중에 지우고 위 코드로 대체)
-			System.out.println("=========================================");
-			System.out.println("[재고 복구 요청]");
-			System.out.println("상품 ID: " + item.getProductId());
-			System.out.println("복구 수량: " + item.getQuantity());
-			System.out.println("=========================================");
+			List<StockManagement> stockManagements = order.getItem().stream()
+				.map(orderItem -> StockManagement.of(
+					orderItem.getProductId(),
+					orderItem.getVariantId(),
+					orderItem.getQuantity()))
+				.toList();
+			productServiceV1.increaseStockBulk(stockManagements);
 		}
 
 		// 4. (선택) 결제 취소 로직
