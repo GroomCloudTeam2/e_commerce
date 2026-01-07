@@ -163,6 +163,15 @@ public class OrderService {
 
 		return OrderResponse.from(order);
 	}
+	public List<OrderResponse> getOrdersByProduct(UUID productId) {
+		// 1. 리포지토리 호출
+		List<Order> orders = orderRepository.findAllByProductId(productId);
+
+		// 2. Entity -> DTO 변환 (Stream 활용)
+		return orders.stream()
+			.map(OrderResponse::from) // 이미 구현된 from 메서드 재사용
+			.collect(Collectors.toList());
+	}
 
 	/**
 	 * 주문 취소 (핵심 비즈니스 로직)
@@ -250,16 +259,5 @@ public class OrderService {
 		}
 	}
 
-	// 👇 [임시] 파일 하나로 해결하기 위해 내부에 만든 가짜 DTO 클래스
-	@Getter
-	@Builder
-	static class MockProductResponse {
-		private UUID productId;
-		private UUID ownerId;
-		private String name;
-		private String thumbnail;
-		private String optionName;
-		private Long price;
-	}
 
 }
