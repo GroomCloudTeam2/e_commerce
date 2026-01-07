@@ -23,7 +23,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(10)
 				.build();
 
@@ -41,7 +41,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(10)
 				.build();
 
@@ -59,7 +59,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(5)
 				.build();
 
@@ -80,7 +80,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(5)
 				.build();
 
@@ -97,7 +97,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(5)
 				.build();
 			variant.decreaseStock(5); // SOLD_OUT 상태로 만들기
@@ -122,7 +122,7 @@ class ProductVariantTest {
 			// given
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(10)
 				.build();
 
@@ -145,16 +145,16 @@ class ProductVariantTest {
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
 				.optionName("빨강/M")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(10)
 				.build();
 
 			// when
-			variant.update("파랑/L", BigDecimal.valueOf(15000), 20);
+			variant.update("파랑/L", Long.valueOf(15000), 20);
 
 			// then
 			assertThat(variant.getOptionName()).isEqualTo("파랑/L");
-			assertThat(variant.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(15000));
+			assertThat(variant.getPrice()).isEqualByComparingTo(Long.valueOf(15000));
 			assertThat(variant.getStockQuantity()).isEqualTo(20);
 		}
 
@@ -165,7 +165,7 @@ class ProductVariantTest {
 			ProductVariant variant = ProductVariant.builder()
 				.skuCode("SKU-001")
 				.optionName("빨강/M")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(10)
 				.build();
 
@@ -174,7 +174,7 @@ class ProductVariantTest {
 
 			// then
 			assertThat(variant.getOptionName()).isEqualTo("빨강/M");
-			assertThat(variant.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+			assertThat(variant.getPrice()).isEqualByComparingTo(Long.valueOf(10000));
 			assertThat(variant.getStockQuantity()).isEqualTo(10);
 		}
 	}

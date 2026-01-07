@@ -24,7 +24,7 @@ class ProductTest {
 			// given
 			Product product = Product.builder()
 				.stockQuantity(10)
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.build();
 
 			// when
@@ -41,7 +41,7 @@ class ProductTest {
 			// given
 			Product product = Product.builder()
 				.stockQuantity(10)
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.build();
 
 			// when
