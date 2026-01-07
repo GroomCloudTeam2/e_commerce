@@ -21,13 +21,12 @@ public class OrderStateAdapter implements OrderStatePort {
 
 	// 1. 결제 성공 처리 (주문 상태 변경 + 정산 장부 생성)
 	@Override
+	@Transactional
 	public void payOrder(UUID orderId) {
 		Order order = orderRepository.findById(orderId)
-			.orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. ID: " + orderId));
 
-		// 1-1. 주문 상태 변경
-		order.markPaid(); // 내부적으로 this.status = PAID 변경 로직
-
+		order.markPaid();
 	}
 
 	// 2. 결제 취소 처리 (주문 취소 + 정산 장부 무효화)
