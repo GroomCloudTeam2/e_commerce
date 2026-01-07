@@ -14,11 +14,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.order.domain.entity.Order;
 import com.groom.e_commerce.order.domain.entity.OrderItem;
 import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
 import com.groom.e_commerce.order.domain.repository.OrderRepository;
-import com.groom.e_commerce.order.domain.status.OrderStatus;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateItemRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
@@ -30,12 +31,12 @@ import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.entity.ProductVariant;
 import com.groom.e_commerce.user.application.service.AddressServiceV1;
 import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
+
 import com.groom.e_commerce.product.application.service.ProductServiceV1;
 import com.groom.e_commerce.product.application.dto.StockManagement;
 import com.groom.e_commerce.product.application.dto.ProductCartInfo;
 import com.groom.e_commerce.product.presentation.dto.response.ResProductDtoV1;
-import com.groom.e_commerce.global.presentation.advice.CustomException;
-import com.groom.e_commerce.global.presentation.advice.ErrorCode;
+
 
 import jakarta.validation.constraints.Null;
 import lombok.Builder;
@@ -59,7 +60,6 @@ public class OrderService {
 	 */
 	@Transactional // 쓰기 트랜잭션 시작
 	public UUID createOrder(UUID buyerId, OrderCreateRequest request) {
-
 
 		ResAddressDtoV1 addressInfo = addressService.getAddress(request.getAddressId(), buyerId);
 
@@ -190,6 +190,7 @@ public class OrderService {
 		//     paymentService.cancelPayment(order.getPaymentId());
 		// }
 	}
+
 	/**
 	 * 구매 확정
 	 */
@@ -226,8 +227,6 @@ public class OrderService {
 			order.syncStatus(); // 엔티티가 스스로 상태를 계산하도록 위임
 		}
 	}
-
-
 
 	/**
 	 * 배송 완료 처리 (관리자/시스템)

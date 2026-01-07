@@ -28,7 +28,7 @@ public class ResProductDetailDtoV1 {
 	private String title;
 	private String description;
 	private String thumbnailUrl;
-	private BigDecimal price;
+	private Long price;
 	private ProductStatus status;
 	private Boolean hasOptions;
 
@@ -135,7 +135,7 @@ public class ResProductDetailDtoV1 {
 		private String skuCode;
 		private List<UUID> optionValueIds;
 		private String optionName;
-		private BigDecimal price;
+		private Long price;
 		private Integer stockQuantity;
 		private VariantStatus status;
 

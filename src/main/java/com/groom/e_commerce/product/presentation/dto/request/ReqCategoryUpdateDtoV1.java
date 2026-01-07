@@ -2,11 +2,15 @@ package com.groom.e_commerce.product.presentation.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ReqCategoryUpdateDtoV1 {
 
 	@Schema(description = "변경할 카테고리명", example = "수정할 이름")
