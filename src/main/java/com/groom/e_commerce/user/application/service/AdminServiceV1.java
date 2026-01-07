@@ -10,13 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.UserEntity;
-import com.groom.e_commerce.user.domain.entity.UserRole;
-import com.groom.e_commerce.user.domain.entity.UserStatus;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerEntity;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerStatus;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
+import com.groom.e_commerce.user.domain.entity.user.UserStatus;
+import com.groom.e_commerce.user.domain.repository.OwnerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
-import com.groom.e_commerce.user.presentation.dto.request.ReqCreateManagerDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResUserDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResUserListDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.admin.ReqCreateManagerDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.admin.ResOwnerApprovalListDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.owner.ResOwnerApprovalDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResUserDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResUserListDtoV1;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +34,7 @@ public class AdminServiceV1 {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final OwnerRepository ownerRepository;
 
 	// ==================== Manager 기능 ====================
 
@@ -132,5 +138,75 @@ public class AdminServiceV1 {
 	private UserEntity findUserById(UUID userId) {
 		return userRepository.findByUserIdAndDeletedAtIsNull(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+	}
+
+	/**
+	 * 승인 대기 중인 owner 목록 조회 (Manager)
+	 */
+	public ResOwnerApprovalListDtoV1 getPendingOwnerList(Pageable pageable) {
+		Page<ResOwnerApprovalDtoV1> pendingOwners = ownerRepository
+			.findByOwnerStatusAndDeletedAtIsNull(OwnerStatus.PENDING, pageable)
+			.map(ResOwnerApprovalDtoV1::from);
+		return ResOwnerApprovalListDtoV1.from(pendingOwners);
+	}
+
+	/**
+	 * 특정 상태의 owner 목록 조회 (Manager)
+	 */
+	public ResOwnerApprovalListDtoV1 getOwnerListByStatus(OwnerStatus status, Pageable pageable) {
+		Page<ResOwnerApprovalDtoV1> owners = ownerRepository
+			.findByOwnerStatusAndDeletedAtIsNull(status, pageable)
+			.map(ResOwnerApprovalDtoV1::from);
+		return ResOwnerApprovalListDtoV1.from(owners);
+	}
+
+	/**
+	 * owner 승인 요청 상세 조회 (Manager)
+	 */
+	public ResOwnerApprovalDtoV1 getOwnerApprovalDetail(UUID ownerId) {
+		OwnerEntity owner = findOwnerById(ownerId);
+		return ResOwnerApprovalDtoV1.from(owner);
+	}
+
+	/**
+	 * owner 승인 (Manager)
+	 */
+	@Transactional
+	public ResOwnerApprovalDtoV1 approveOwner(UUID ownerId) {
+		OwnerEntity owner = findOwnerById(ownerId);
+
+		if (!owner.isPending()) {
+			throw new CustomException(ErrorCode.VALIDATION_ERROR,
+				"승인 대기 상태인 요청만 승인할 수 있습니다. 현재 상태: " + owner.getOwnerStatus());
+		}
+
+		owner.approve();
+		log.info("Owner approved: OwnerId={}, storeName={}", ownerId, owner.getStoreName());
+
+		return ResOwnerApprovalDtoV1.from(owner);
+	}
+
+	/**
+	 * Owner 승인 거절 (Manager)
+	 */
+	@Transactional
+	public ResOwnerApprovalDtoV1 rejectOwner(UUID ownerId, String rejectedReason) {
+		OwnerEntity owner = findOwnerById(ownerId);
+
+		if (!owner.isPending()) {
+			throw new CustomException(ErrorCode.VALIDATION_ERROR,
+				"승인 대기 상태인 요청만 거절할 수 있습니다. 현재 상태: " + owner.getOwnerStatus());
+		}
+
+		owner.reject(rejectedReason);
+		log.info("owner rejected: ownerId={}, storeName={}, reason={}",
+			ownerId, owner.getStoreName(), rejectedReason);
+
+		return ResOwnerApprovalDtoV1.from(owner);
+	}
+
+	private OwnerEntity findOwnerById(UUID ownerId) {
+		return ownerRepository.findByOwnerIdAndDeletedAtIsNull(ownerId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "해당 판매자를 찾을 수 없습니다."));
 	}
 }

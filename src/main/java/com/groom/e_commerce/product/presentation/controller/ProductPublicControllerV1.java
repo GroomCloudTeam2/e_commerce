@@ -1,6 +1,5 @@
 package com.groom.e_commerce.product.presentation.controller;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -36,8 +35,8 @@ public class ProductPublicControllerV1 {
 	public ResponseEntity<Page<ResProductSearchDtoV1>> searchProducts(
 		@Parameter(description = "카테고리 ID") @RequestParam(required = false) UUID categoryId,
 		@Parameter(description = "검색어 (상품명)") @RequestParam(required = false) String keyword,
-		@Parameter(description = "최소 가격") @RequestParam(required = false) BigDecimal minPrice,
-		@Parameter(description = "최대 가격") @RequestParam(required = false) BigDecimal maxPrice,
+		@Parameter(description = "최소 가격") @RequestParam(required = false) Long minPrice,
+		@Parameter(description = "최대 가격") @RequestParam(required = false) Long maxPrice,
 		@Parameter(description = "정렬 (price_asc, price_desc, newest, rating)") @RequestParam(required = false, defaultValue = "newest") String sort,
 		@Parameter(description = "페이지 번호 (1부터 시작)") @RequestParam(required = false, defaultValue = "1") Integer page,
 		@Parameter(description = "페이지 크기") @RequestParam(required = false, defaultValue = "20") Integer size

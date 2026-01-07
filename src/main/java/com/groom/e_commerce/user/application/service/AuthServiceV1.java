@@ -10,15 +10,16 @@ import org.springframework.util.StringUtils;
 import com.groom.e_commerce.global.infrastructure.config.security.JwtUtil;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.SellerEntity;
-import com.groom.e_commerce.user.domain.entity.UserEntity;
-import com.groom.e_commerce.user.domain.entity.UserRole;
-import com.groom.e_commerce.user.domain.entity.UserStatus;
-import com.groom.e_commerce.user.domain.repository.SellerRepository;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerEntity;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerStatus;
+import com.groom.e_commerce.user.domain.entity.user.UserEntity;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
+import com.groom.e_commerce.user.domain.entity.user.UserStatus;
+import com.groom.e_commerce.user.domain.repository.OwnerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
-import com.groom.e_commerce.user.presentation.dto.request.ReqLoginDtoV1;
-import com.groom.e_commerce.user.presentation.dto.request.ReqSignupDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.ResTokenDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqLoginDtoV1;
+import com.groom.e_commerce.user.presentation.dto.request.user.ReqSignupDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.user.ResTokenDtoV1;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthServiceV1 {
 
 	private final UserRepository userRepository;
-	private final SellerRepository sellerRepository;
+	private final OwnerRepository ownerRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtil jwtUtil;
 
@@ -41,11 +42,10 @@ public class AuthServiceV1 {
 			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 OWNER만 회원가입할 수 있습니다.");
 		}
 
+		// 탈퇴 유저 복구 처리
 		Optional<UserEntity> existingUser = userRepository.findByEmail(request.getEmail());
-
 		if (existingUser.isPresent()) {
 			UserEntity user = existingUser.get();
-
 			if (user.isWithdrawn()) {
 				user.reactivate(
 					passwordEncoder.encode(request.getPassword()),
@@ -54,19 +54,27 @@ public class AuthServiceV1 {
 				);
 				log.info("User reactivated: {}", request.getEmail());
 				return;
-			} else {
-				throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
 			}
+			throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
 		}
 
 		if (userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())) {
 			throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
 		}
 
+		// OWNER인 경우 검증 + 저장을 한 블록에서 처리
 		if (request.isOwner()) {
 			validateOwnerFields(request);
+			UserEntity user = createAndSaveUser(request);
+			createAndSaveOwner(user, request);
+			log.info("OWNER signed up with store: {}", request.getStore());
+		} else {
+			createAndSaveUser(request);
+			log.info("User signed up: {}", request.getEmail());
 		}
+	}
 
+	private UserEntity createAndSaveUser(ReqSignupDtoV1 request) {
 		UserEntity user = UserEntity.builder()
 			.email(request.getEmail())
 			.password(passwordEncoder.encode(request.getPassword()))
@@ -75,25 +83,23 @@ public class AuthServiceV1 {
 			.role(request.getRole())
 			.status(UserStatus.ACTIVE)
 			.build();
+		return userRepository.save(user);
+	}
 
-		userRepository.save(user);
+	private void createAndSaveOwner(UserEntity user, ReqSignupDtoV1 request) {
+		OwnerEntity owner = OwnerEntity.builder()
+			.user(user)
+			.storeName(request.getStore())
+			.zipCode(request.getZipCode())
+			.address(request.getAddress())
+			.detailAddress(request.getDetailAddress())
+			.bank(request.getBank())
+			.account(request.getAccount())
+			.approvalRequest(request.getApprovalRequest())
+			.ownerStatus(OwnerStatus.PENDING)
+			.build();
 
-		if (request.isOwner()) {
-			SellerEntity seller = SellerEntity.builder()
-				.user(user)
-				.storeName(request.getStore())
-				.zipCode(request.getZipCode())
-				.address(request.getAddress())
-				.detailAddress(request.getDetailAddress())
-				.bank(request.getBank())
-				.account(request.getAccount())
-				.build();
-
-			sellerRepository.save(seller);
-			log.info("Owner signed up with store: {}", request.getStore());
-		} else {
-			log.info("User signed up: {}", request.getEmail());
-		}
+		ownerRepository.save(owner);
 	}
 
 	public ResTokenDtoV1 login(ReqLoginDtoV1 request) {

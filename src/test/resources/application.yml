@@ -1,20 +1,23 @@
 spring:
   datasource:
-    # 도커에 띄운 PostgreSQL 연결 정보
-    url: jdbc:postgresql://localhost:5432/ecommerce
-    username: postgres
-    password: password
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:ecommerce-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
 
   jpa:
     hibernate:
-      # 테스트 실행 시마다 테이블을 새로 생성하고 종료 시 삭제
-      ddl-auto: create-drop
+      ddl-auto: create-drop   # ✅ 테스트 끝나면 테이블 자동 삭제
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: false   # 테스트에선 필요 없음
+
 
 # 테스트용 JWT 시크릿 (기존 유지)
 jwt:
