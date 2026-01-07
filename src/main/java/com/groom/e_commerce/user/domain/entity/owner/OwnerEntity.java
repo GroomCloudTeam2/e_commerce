@@ -1,4 +1,4 @@
-package com.groom.e_commerce.user.domain.entity.seller;
+package com.groom.e_commerce.user.domain.entity.owner;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,20 +24,20 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "p_seller")
+@Table(name = "p_owner")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @SuperBuilder
-public class SellerEntity extends BaseEntity {
+public class OwnerEntity extends BaseEntity {
 
 	// =========================
 	// PK
 	// =========================
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(name = "seller_id", columnDefinition = "uuid")
-	private UUID sellerId;
+	@Column(name = "owner_id", columnDefinition = "uuid")
+	private UUID ownerId;
 
 	// =========================
 	// Relation
@@ -83,8 +83,8 @@ public class SellerEntity extends BaseEntity {
 	// Status
 	// =========================
 	@Enumerated(EnumType.STRING)
-	@Column(name = "seller_status", length = 20, nullable = false)
-	private SellerStatus sellerStatus;
+	@Column(name = "owner_status", length = 20, nullable = false)
+	private OwnerStatus ownerStatus;
 
 	@Column(name = "approved_at")
 	private LocalDateTime approvedAt;
@@ -128,28 +128,28 @@ public class SellerEntity extends BaseEntity {
 	// Approval Methods
 	// =========================
 	public void approve() {
-		this.sellerStatus = SellerStatus.APPROVED;
+		this.ownerStatus = OwnerStatus.APPROVED;
 		this.approvedAt = LocalDateTime.now();
 		this.rejectedReason = null;
 		this.rejectedAt = null;
 	}
 
 	public void reject(String rejectedReason) {
-		this.sellerStatus = SellerStatus.REJECTED;
+		this.ownerStatus = OwnerStatus.REJECTED;
 		this.rejectedReason = rejectedReason;
 		this.rejectedAt = LocalDateTime.now();
 		this.approvedAt = null;
 	}
 
 	public boolean isPending() {
-		return this.sellerStatus == SellerStatus.PENDING;
+		return this.ownerStatus == OwnerStatus.PENDING;
 	}
 
 	public boolean isApproved() {
-		return this.sellerStatus == SellerStatus.APPROVED;
+		return this.ownerStatus == OwnerStatus.APPROVED;
 	}
 
 	public boolean isRejected() {
-		return this.sellerStatus == SellerStatus.REJECTED;
+		return this.ownerStatus == OwnerStatus.REJECTED;
 	}
 }
