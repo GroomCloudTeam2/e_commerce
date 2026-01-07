@@ -38,7 +38,7 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				// 인증/회원가입
-				.requestMatchers("/auth/signup", "/auth/login").permitAll()
+				.requestMatchers("/api/v1/auth/signup", "/api/v1/auth/login").permitAll()
 
 				// 결제 관련 엔드포인트 (ready/success/fail/confirm 등 포함)
 				.requestMatchers("/api/v1/payments/**").permitAll()
