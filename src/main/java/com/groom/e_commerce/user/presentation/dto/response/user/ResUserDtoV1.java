@@ -4,12 +4,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.groom.e_commerce.user.domain.entity.address.AddressEntity;
-import com.groom.e_commerce.user.domain.entity.seller.SellerEntity;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerEntity;
 import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 import com.groom.e_commerce.user.domain.entity.user.UserRole;
 import com.groom.e_commerce.user.domain.entity.user.UserStatus;
 import com.groom.e_commerce.user.presentation.dto.response.address.ResAddressDtoV1;
-import com.groom.e_commerce.user.presentation.dto.response.seller.ResSellerApprovalDtoV1;
+import com.groom.e_commerce.user.presentation.dto.response.owner.ResOwnerApprovalDtoV1;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -30,7 +30,7 @@ public class ResUserDtoV1 {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	// Seller
-	private ResSellerApprovalDtoV1 sellerInfo;
+	private ResOwnerApprovalDtoV1 ownerInfo;
 	// ------
 
 	public static ResUserDtoV1 from(UserEntity user) {
@@ -60,7 +60,7 @@ public class ResUserDtoV1 {
 			.build();
 	}
 
-	public static ResUserDtoV1 from(UserEntity user, AddressEntity defaultAddress, SellerEntity seller) {
+	public static ResUserDtoV1 from(UserEntity user, AddressEntity defaultAddress, OwnerEntity owner) {
 		return ResUserDtoV1.builder()
 			.id(user.getUserId())
 			.email(user.getEmail())
@@ -69,7 +69,7 @@ public class ResUserDtoV1 {
 			.role(user.getRole())
 			.status(user.getStatus())
 			.defaultAddress(defaultAddress != null ? ResAddressDtoV1.from(defaultAddress) : null)
-			.sellerInfo(seller != null ? ResSellerApprovalDtoV1.from(seller) : null)
+			.ownerInfo(owner != null ? ResOwnerApprovalDtoV1.from(owner) : null)
 			.build();
 	}
 }

@@ -6,12 +6,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@AllArgsConstructor
+@Setter
 @NoArgsConstructor
 public class ReqSignupDtoV1 {
 
@@ -42,6 +42,6 @@ public class ReqSignupDtoV1 {
 	private String approvalRequest;
 
 	public boolean isOwner() {
-		return this.role == UserRole.SELLER;
+		return this.role == UserRole.OWNER;
 	}
 }

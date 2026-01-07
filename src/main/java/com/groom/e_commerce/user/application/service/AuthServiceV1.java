@@ -10,12 +10,12 @@ import org.springframework.util.StringUtils;
 import com.groom.e_commerce.global.infrastructure.config.security.JwtUtil;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
-import com.groom.e_commerce.user.domain.entity.seller.SellerEntity;
-import com.groom.e_commerce.user.domain.entity.seller.SellerStatus;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerEntity;
+import com.groom.e_commerce.user.domain.entity.owner.OwnerStatus;
 import com.groom.e_commerce.user.domain.entity.user.UserEntity;
 import com.groom.e_commerce.user.domain.entity.user.UserRole;
 import com.groom.e_commerce.user.domain.entity.user.UserStatus;
-import com.groom.e_commerce.user.domain.repository.SellerRepository;
+import com.groom.e_commerce.user.domain.repository.OwnerRepository;
 import com.groom.e_commerce.user.domain.repository.UserRepository;
 import com.groom.e_commerce.user.presentation.dto.request.user.ReqLoginDtoV1;
 import com.groom.e_commerce.user.presentation.dto.request.user.ReqSignupDtoV1;
@@ -31,15 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthServiceV1 {
 
 	private final UserRepository userRepository;
-	private final SellerRepository sellerRepository;
+	private final OwnerRepository ownerRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtil jwtUtil;
 
 	@Transactional
 	public void signup(ReqSignupDtoV1 request) {
 		// USER, OWNER만 회원가입 가능 (MANAGER는 MASTER가 생성)
-		if (request.getRole() != UserRole.USER && request.getRole() != UserRole.SELLER) {
-			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 SELLER만 회원가입할 수 있습니다.");
+		if (request.getRole() != UserRole.USER && request.getRole() != UserRole.OWNER) {
+			throw new CustomException(ErrorCode.VALIDATION_ERROR, "USER 또는 OWNER만 회원가입할 수 있습니다.");
 		}
 
 		// 탈퇴 유저 복구 처리
@@ -62,12 +62,12 @@ public class AuthServiceV1 {
 			throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
 		}
 
-		// SELLER인 경우 검증 + 저장을 한 블록에서 처리
+		// OWNER인 경우 검증 + 저장을 한 블록에서 처리
 		if (request.isOwner()) {
 			validateOwnerFields(request);
 			UserEntity user = createAndSaveUser(request);
-			createAndSaveSeller(user, request);
-			log.info("SELLER signed up with store: {}", request.getStore());
+			createAndSaveOwner(user, request);
+			log.info("OWNER signed up with store: {}", request.getStore());
 		} else {
 			createAndSaveUser(request);
 			log.info("User signed up: {}", request.getEmail());
@@ -86,8 +86,8 @@ public class AuthServiceV1 {
 		return userRepository.save(user);
 	}
 
-	private void createAndSaveSeller(UserEntity user, ReqSignupDtoV1 request) {
-		SellerEntity seller = SellerEntity.builder()
+	private void createAndSaveOwner(UserEntity user, ReqSignupDtoV1 request) {
+		OwnerEntity owner = OwnerEntity.builder()
 			.user(user)
 			.storeName(request.getStore())
 			.zipCode(request.getZipCode())
@@ -96,10 +96,10 @@ public class AuthServiceV1 {
 			.bank(request.getBank())
 			.account(request.getAccount())
 			.approvalRequest(request.getApprovalRequest())
-			.sellerStatus(SellerStatus.PENDING)
+			.ownerStatus(OwnerStatus.PENDING)
 			.build();
 
-		sellerRepository.save(seller);
+		ownerRepository.save(owner);
 	}
 
 	public ResTokenDtoV1 login(ReqLoginDtoV1 request) {
