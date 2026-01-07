@@ -1,8 +1,8 @@
 package com.groom.e_commerce.product.infrastructure.repository;
 
-import static com.groom.e_commerce.product.domain.entity.QCategory.category;
-import static com.groom.e_commerce.product.domain.entity.QProduct.product;
-import static com.groom.e_commerce.product.domain.entity.QProductVariant.productVariant;
+import static com.groom.e_commerce.product.domain.entity.QCategory.*;
+import static com.groom.e_commerce.product.domain.entity.QProduct.*;
+import static com.groom.e_commerce.product.domain.entity.QProductVariant.*;
 
 import java.util.List;
 import java.util.UUID;

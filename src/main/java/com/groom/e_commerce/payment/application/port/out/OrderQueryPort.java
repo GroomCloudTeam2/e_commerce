@@ -1,4 +1,3 @@
-// src/main/java/com/groom/e_commerce/payment/application/port/out/OrderQueryPort.java
 package com.groom.e_commerce.payment.application.port.out;
 
 import java.util.List;

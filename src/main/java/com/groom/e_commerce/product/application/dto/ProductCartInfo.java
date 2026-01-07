@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 public class ProductCartInfo {
 
 	private UUID productId;
+	private UUID ownerId;
 	private UUID variantId;      // 옵션이 없는 경우 null
 	private String productName;
 	private String optionName;   // 옵션이 없는 경우 null (예: "Red / L")
@@ -29,6 +30,7 @@ public class ProductCartInfo {
 	public static ProductCartInfo from(Product product, ProductVariant variant, boolean isAvailable) {
 		return ProductCartInfo.builder()
 			.productId(product.getId())
+			.ownerId(product.getOwnerId())
 			.variantId(variant != null ? variant.getId() : null)
 			.productName(product.getTitle())
 			.optionName(variant != null ? variant.getOptionName() : null)

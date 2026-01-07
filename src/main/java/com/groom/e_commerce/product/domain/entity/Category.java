@@ -1,12 +1,8 @@
 package com.groom.e_commerce.product.domain.entity;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
 
@@ -41,7 +37,7 @@ public class Category extends BaseEntity {
 	private Category parent;
 
 	@OneToMany(mappedBy = "parent")
-	private List<Category> children = new ArrayList<>();
+	private final List<Category> children = new ArrayList<>();
 
 	@Column(name = "name", nullable = false, length = 100)
 	private String name;

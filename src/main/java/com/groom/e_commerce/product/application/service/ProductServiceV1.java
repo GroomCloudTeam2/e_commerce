@@ -120,13 +120,15 @@ public class ProductServiceV1 {
 
 			for (ReqProductCreateDtoV1.VariantRequest variantReq : request.getVariants()) {
 				// SKU 코드 중복 검사
-				if (variantReq.getSkuCode() != null && productVariantRepository.existsBySkuCode(variantReq.getSkuCode())) {
+				if (variantReq.getSkuCode() != null && productVariantRepository.existsBySkuCode(
+					variantReq.getSkuCode())) {
 					throw new CustomException(ErrorCode.DUPLICATE_SKU_CODE);
 				}
 
 				// optionValueIndexes를 실제 ID로 변환
 				List<UUID> optionValueIds = new ArrayList<>();
-				String optionName = buildOptionName(variantReq.getOptionValueIndexes(), savedOptionValueIdsList, savedProduct.getOptions(), optionValueIds);
+				String optionName = buildOptionName(variantReq.getOptionValueIndexes(), savedOptionValueIdsList,
+					savedProduct.getOptions(), optionValueIds);
 
 				ProductVariant variant = ProductVariant.builder()
 					.product(savedProduct)
@@ -440,5 +442,10 @@ public class ProductServiceV1 {
 		for (StockManagement item : items) {
 			increaseStock(item.getProductId(), item.getVariantId(), item.getQuantity());
 		}
+	}
+
+	public ProductVariant findVariantById(UUID variantId) {
+		return productVariantRepository.findById(variantId)
+			.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
 	}
 }

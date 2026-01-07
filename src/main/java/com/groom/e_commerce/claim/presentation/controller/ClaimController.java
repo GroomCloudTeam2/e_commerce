@@ -1,22 +1,26 @@
 package com.groom.e_commerce.claim.presentation.controller;
 
-import com.groom.e_commerce.claim.presentation.dto.ClaimDto;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.groom.e_commerce.claim.application.service.ClaimService;
+import com.groom.e_commerce.claim.presentation.dto.ClaimDto;
 import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import org.springframework.data.domain.Pageable;
-import java.util.List;
-import java.util.UUID;
 
 @Tag(name = "Claim", description = "Claim 관련 API")
 @RestController
@@ -50,13 +54,14 @@ public class ClaimController {
 		// return ResponseEntity.ok(service.getAllClaims(pageable));
 		return ResponseEntity.ok(null);
 	}
+
 	// 관리자: 승인
 	@PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
 	@PostMapping("/admin/claims/{claimId}/approve")
 	public ResponseEntity<Void> approveClaim(
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID claimId) {
-		
+
 		claimService.approveClaim(user.getUserId(), claimId);
 		return ResponseEntity.ok().build();
 	}
@@ -68,7 +73,7 @@ public class ClaimController {
 		@AuthenticationPrincipal CustomUserDetails user,
 		@PathVariable UUID claimId,
 		@RequestBody ClaimDto.RejectRequest request) {
-		
+
 		claimService.rejectClaim(user.getUserId(), claimId, request.getRejectReason());
 		return ResponseEntity.ok().build();
 	}

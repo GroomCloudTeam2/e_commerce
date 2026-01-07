@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
 import com.groom.e_commerce.global.presentation.advice.ErrorCode;
@@ -79,10 +76,10 @@ public class Product extends BaseEntity {
 
 	// 상품이 삭제되면 옵션들도 같이 삭제(Cascade)
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ProductOption> options = new ArrayList<>();
+	private final List<ProductOption> options = new ArrayList<>();
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ProductVariant> variants = new ArrayList<>();
+	private final List<ProductVariant> variants = new ArrayList<>();
 
 	@Builder
 	public Product(UUID ownerId, Category category, String title, String description,

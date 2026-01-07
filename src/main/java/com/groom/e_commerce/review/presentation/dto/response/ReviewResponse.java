@@ -1,12 +1,12 @@
 package com.groom.e_commerce.review.presentation.dto.response;
 
+import java.util.UUID;
+
 import com.groom.e_commerce.review.domain.entity.ReviewCategory;
 import com.groom.e_commerce.review.domain.entity.ReviewEntity;
 
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.UUID;
 
 @Getter
 @Builder

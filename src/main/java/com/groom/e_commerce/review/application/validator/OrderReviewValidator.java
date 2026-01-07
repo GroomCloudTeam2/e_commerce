@@ -48,7 +48,7 @@ public class OrderReviewValidator {
 		}
 
 		if (!order.getStatus().equals(OrderStatus.CONFIRMED)) {
-		     throw new IllegalStateException("리뷰 가능한 주문 상태가 아닙니다.");
-		 }
+			throw new IllegalStateException("리뷰 가능한 주문 상태가 아닙니다.");
+		}
 	}
 }

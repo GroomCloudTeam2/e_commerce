@@ -1,14 +1,14 @@
-
 package com.groom.e_commerce.order.domain.entity; // ✅ 패키지 변경!
 
-import com.groom.e_commerce.order.domain.status.OrderStatus;
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
+import com.groom.e_commerce.order.domain.status.OrderStatus;
 
 class OrderDomainTest {
 

@@ -1,16 +1,12 @@
 package com.groom.e_commerce.product.presentation.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -48,12 +44,6 @@ class CategoryMasterControllerV1Test {
 
 	@MockBean
 	private CategoryServiceV1 categoryService;
-
-	@TestConfiguration
-	@EnableMethodSecurity(prePostEnabled = true)
-	static class SecurityTestConfig {
-	}
-
 	private UUID categoryId;
 
 	@BeforeEach
@@ -133,5 +123,10 @@ class CategoryMasterControllerV1Test {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isNoContent());
+	}
+
+	@TestConfiguration
+	@EnableMethodSecurity(prePostEnabled = true)
+	static class SecurityTestConfig {
 	}
 }

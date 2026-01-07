@@ -1,14 +1,17 @@
 package com.groom.e_commerce.global.infrastructure.client.Classification;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.groom.e_commerce.review.domain.entity.ReviewCategory;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.groom.e_commerce.review.domain.entity.ReviewCategory;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Component
 public class AiRestClient {
@@ -47,14 +50,18 @@ public class AiRestClient {
 	}
 
 	// ===== DTO =====
-	@Getter @Setter
-	@AllArgsConstructor @NoArgsConstructor
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class AiRequest {
 		private String comment;
 	}
 
-	@Getter @Setter
-	@AllArgsConstructor @NoArgsConstructor
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class AiResponse {
 		private ReviewCategory category;
 		private double confidence;
