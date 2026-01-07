@@ -69,7 +69,7 @@ class ReviewControllerTest {
 			eq(ORDER_ID), eq(PRODUCT_ID), eq(USER_ID), any(CreateReviewRequest.class)
 		)).thenReturn(mock(ReviewResponse.class));
 
-		mockMvc.perform(post("/reviews/{orderId}/items/{productId}", ORDER_ID, PRODUCT_ID)
+		mockMvc.perform(post("/api/v1/reviews/{orderId}/items/{productId}", ORDER_ID, PRODUCT_ID)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isCreated());
@@ -80,7 +80,7 @@ class ReviewControllerTest {
 		when(reviewService.getReview(REVIEW_ID, USER_ID))
 			.thenReturn(mock(ReviewResponse.class));
 
-		mockMvc.perform(get("/reviews/me/{reviewId}", REVIEW_ID))
+		mockMvc.perform(get("/api/v1/reviews/me/{reviewId}", REVIEW_ID))
 			.andExpect(status().isOk());
 	}
 
@@ -93,7 +93,7 @@ class ReviewControllerTest {
 			eq(REVIEW_ID), eq(USER_ID), any(UpdateReviewRequest.class)
 		)).thenReturn(mock(ReviewResponse.class));
 
-		mockMvc.perform(put("/reviews/{reviewId}", REVIEW_ID)
+		mockMvc.perform(put("/api/v1/reviews/{reviewId}", REVIEW_ID)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk());
@@ -101,7 +101,7 @@ class ReviewControllerTest {
 
 	@Test
 	void 리뷰_삭제_성공() throws Exception {
-		mockMvc.perform(delete("/reviews/{reviewId}", REVIEW_ID))
+		mockMvc.perform(delete("/api/v1/reviews/{reviewId}", REVIEW_ID))
 			.andExpect(status().isNoContent());
 
 		verify(reviewService).deleteReview(REVIEW_ID, USER_ID, USER_ROLE);
@@ -112,7 +112,7 @@ class ReviewControllerTest {
 		when(reviewService.likeReview(REVIEW_ID, USER_ID))
 			.thenReturn(10);
 
-		mockMvc.perform(post("/reviews/{reviewId}/like", REVIEW_ID))
+		mockMvc.perform(post("/api/v1/reviews/{reviewId}/like", REVIEW_ID))
 			.andExpect(status().isOk())
 			.andExpect(content().string("10"));
 	}
@@ -122,7 +122,7 @@ class ReviewControllerTest {
 		when(reviewService.unlikeReview(REVIEW_ID, USER_ID))
 			.thenReturn(9);
 
-		mockMvc.perform(delete("/reviews/{reviewId}/like", REVIEW_ID))
+		mockMvc.perform(delete("/api/v1/reviews/{reviewId}/like", REVIEW_ID))
 			.andExpect(status().isOk())
 			.andExpect(content().string("9"));
 	}

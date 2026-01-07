@@ -46,7 +46,7 @@ class ProductReviewControllerTest {
 		)).thenReturn(mock(ProductReviewResponse.class));
 
 		// when & then
-		mockMvc.perform(get("/reviews/product/{productId}/", PRODUCT_ID))
+		mockMvc.perform(get("/api/v1/reviews/product/{productId}/", PRODUCT_ID))
 			.andExpect(status().isOk());
 
 		verify(reviewService).getProductReviews(
@@ -63,7 +63,7 @@ class ProductReviewControllerTest {
 
 		// when & then
 		mockMvc.perform(
-				get("/reviews/product/{productId}/", PRODUCT_ID)
+				get("/api/v1/reviews/product/{productId}/", PRODUCT_ID)
 					.param("page", "2")
 					.param("size", "5")
 					.param("sort", "like")
