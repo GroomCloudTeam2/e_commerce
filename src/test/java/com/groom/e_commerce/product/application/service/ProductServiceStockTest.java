@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +51,7 @@ class ProductServiceStockTest {
 		int quantity = 5;
 		Product product = Product.builder()
 			.title("Test")
-			.price(BigDecimal.TEN)
+			.price(10L)
 			.stockQuantity(10)
 			.hasOptions(false)
 			.build();
@@ -187,7 +186,7 @@ class ProductServiceStockTest {
 			Product product = Product.builder()
 				.title("테스트 상품")
 				.thumbnailUrl("http://test.com/img.jpg")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(100)
 				.hasOptions(false)
 				.build();
@@ -206,7 +205,7 @@ class ProductServiceStockTest {
 			ProductCartInfo info = result.get(0);
 			assertThat(info.getProductId()).isEqualTo(productId);
 			assertThat(info.getProductName()).isEqualTo("테스트 상품");
-			assertThat(info.getPrice()).isEqualTo(BigDecimal.valueOf(10000));
+			assertThat(info.getPrice()).isEqualTo(Long.valueOf(10000));
 			assertThat(info.getStockQuantity()).isEqualTo(100);
 			assertThat(info.isAvailable()).isTrue();
 			assertThat(info.getVariantId()).isNull();
@@ -222,7 +221,7 @@ class ProductServiceStockTest {
 			Product product = Product.builder()
 				.title("옵션 상품")
 				.thumbnailUrl("http://test.com/img.jpg")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.hasOptions(true)
 				.build();
 			ReflectionTestUtils.setField(product, "id", productId);
@@ -231,7 +230,7 @@ class ProductServiceStockTest {
 			ProductVariant variant = ProductVariant.builder()
 				.product(product)
 				.optionName("Red / L")
-				.price(BigDecimal.valueOf(12000))
+				.price(Long.valueOf(12000))
 				.stockQuantity(50)
 				.build();
 			ReflectionTestUtils.setField(variant, "id", variantId);
@@ -251,7 +250,7 @@ class ProductServiceStockTest {
 			assertThat(info.getProductId()).isEqualTo(productId);
 			assertThat(info.getVariantId()).isEqualTo(variantId);
 			assertThat(info.getOptionName()).isEqualTo("Red / L");
-			assertThat(info.getPrice()).isEqualTo(BigDecimal.valueOf(12000));
+			assertThat(info.getPrice()).isEqualTo(Long.valueOf(12000));
 			assertThat(info.getStockQuantity()).isEqualTo(50);
 			assertThat(info.isAvailable()).isTrue();
 		}
@@ -317,7 +316,7 @@ class ProductServiceStockTest {
 			UUID productId = UUID.randomUUID();
 			Product product = Product.builder()
 				.title("판매 중지 상품")
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(100)
 				.hasOptions(false)
 				.build();
@@ -352,7 +351,7 @@ class ProductServiceStockTest {
 
 			ProductVariant variant = ProductVariant.builder()
 				.product(product)
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.stockQuantity(50)
 				.build();
 			ReflectionTestUtils.setField(variant, "id", variantId);

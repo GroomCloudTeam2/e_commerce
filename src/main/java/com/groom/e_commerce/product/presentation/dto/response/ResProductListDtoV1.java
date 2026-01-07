@@ -18,7 +18,7 @@ public class ResProductListDtoV1 {
 	private String title;
 	private String thumbnailUrl;
 	private ProductStatus status;
-	private BigDecimal price;
+	private Long price;
 	private Integer stockQuantity;
 	private Integer salesCount;
 	private String categoryName;

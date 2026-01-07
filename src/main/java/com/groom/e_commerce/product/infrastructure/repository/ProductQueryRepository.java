@@ -4,7 +4,6 @@ import static com.groom.e_commerce.product.domain.entity.QCategory.category;
 import static com.groom.e_commerce.product.domain.entity.QProduct.product;
 import static com.groom.e_commerce.product.domain.entity.QProductVariant.productVariant;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,8 +33,8 @@ public class ProductQueryRepository {
 	public Page<Product> searchProducts(
 		String keyword,
 		UUID categoryId,
-		BigDecimal minPrice,
-		BigDecimal maxPrice,
+		Long minPrice,
+		Long maxPrice,
 		ProductStatus status,
 		Pageable pageable
 	) {
@@ -76,8 +75,8 @@ public class ProductQueryRepository {
 	public Page<Product> searchProductsForBuyer(
 		String keyword,
 		UUID categoryId,
-		BigDecimal minPrice,
-		BigDecimal maxPrice,
+		Long minPrice,
+		Long maxPrice,
 		ProductSortType sortType,
 		Pageable pageable
 	) {
@@ -200,11 +199,11 @@ public class ProductQueryRepository {
 		return categoryId != null ? product.category.id.eq(categoryId) : null;
 	}
 
-	private BooleanExpression priceGoe(BigDecimal minPrice) {
+	private BooleanExpression priceGoe(Long minPrice) {
 		return minPrice != null ? product.price.goe(minPrice) : null;
 	}
 
-	private BooleanExpression priceLoe(BigDecimal maxPrice) {
+	private BooleanExpression priceLoe(Long maxPrice) {
 		return maxPrice != null ? product.price.loe(maxPrice) : null;
 	}
 

@@ -23,7 +23,7 @@ public class ResProductDtoV1 {
 	private String thumbnailUrl;
 	private ProductStatus status;
 	private Boolean hasOptions;
-	private BigDecimal price;
+	private Long price;
 	private Integer stockQuantity;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
