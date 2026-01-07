@@ -1,5 +1,6 @@
 package com.groom.e_commerce.order.presentation.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Order", description = "주문 생성 및 조회 관련 API") // 1. API 그룹 이름
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/orders")
+@RequestMapping("/api/v1/orders")
 public class OrderController {
 
 	private final OrderService orderService;
@@ -47,6 +48,13 @@ public class OrderController {
 	public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID orderId) {
 		OrderResponse response = orderService.getOrder(orderId);
 		return ResponseEntity.ok(response);
+	}
+
+	@Operation(summary = "상품별 주문 목록 조회", description = "특정 상품(ProductId)이 포함된 모든 주문 내역을 조회합니다.")
+	@GetMapping("/product/{productId}")
+	public ResponseEntity<List<OrderResponse>> getOrdersByProduct(@PathVariable UUID productId) {
+		List<OrderResponse> responses = orderService.getOrdersByProduct(productId);
+		return ResponseEntity.ok(responses);
 	}
 
 	@PostMapping("/{orderId}/cancel")

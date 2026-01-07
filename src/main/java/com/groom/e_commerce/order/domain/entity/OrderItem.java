@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
 import com.groom.e_commerce.order.domain.status.OrderStatus;
+import com.groom.e_commerce.product.application.dto.StockManagement;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -81,11 +82,18 @@ public class OrderItem extends BaseEntity {
 		this.optionName = optionName;
 		this.unitPrice = unitPrice;
 		this.quantity = quantity;
-		this.subtotal = unitPrice * quantity;
+		this.subtotal = unitPrice*quantity;
 		this.itemStatus = OrderStatus.PENDING;
 	}
+	public StockManagement toStockManagement() {
+		return StockManagement.of(this.productId, this.variantId, this.quantity);
+	}
+
 
 	public void cancel() {
+		if (this.itemStatus == OrderStatus.SHIPPING || this.itemStatus == OrderStatus.DELIVERED) {
+			throw new IllegalStateException("이미 배송된 상품은 취소할 수 없습니다.");
+		}
 		this.itemStatus = OrderStatus.CANCELLED;
 	}
 

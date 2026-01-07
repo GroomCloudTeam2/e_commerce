@@ -43,7 +43,13 @@ public enum ErrorCode {
     CATEGORY_HAS_CHILDREN(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_CHILDREN", "하위 카테고리가 존재하여 삭제할 수 없습니다."),
     CATEGORY_HAS_PRODUCTS(HttpStatus.BAD_REQUEST, "CATEGORY_HAS_PRODUCTS", "등록된 상품이 존재하여 삭제할 수 없습니다."),
     VARIANT_REQUIRED(HttpStatus.BAD_REQUEST, "VARIANT_REQUIRED", "옵션 상품은 variantId가 필요합니다."),
-    VARIANT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "VARIANT_NOT_ALLOWED", "옵션이 없는 상품에는 variantId를 보낼 수 없습니다.");
+    VARIANT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "VARIANT_NOT_ALLOWED", "옵션이 없는 상품에는 variantId를 보낼 수 없습니다."),
+
+	// Cart
+	CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART_ITEM_NOT_FOUND", "장바구니에서 상품을 찾을 수 없습니다."),
+	ACCESS_DENIED(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "해당 리소스에 대한 접근 권한이 없습니다."),
+	// Cart
+	CART_NOT_FOUND(HttpStatus.NOT_FOUND, "CART_NOT_FOUND", "장바구니를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
