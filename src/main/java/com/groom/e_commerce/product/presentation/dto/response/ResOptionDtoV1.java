@@ -22,6 +22,17 @@ public class ResOptionDtoV1 {
 	private Integer sortOrder;
 	private List<OptionValueDto> values;
 
+	public static ResOptionDtoV1 from(ProductOption option) {
+		return ResOptionDtoV1.builder()
+			.optionId(option.getId())
+			.name(option.getName())
+			.sortOrder(option.getSortOrder())
+			.values(option.getOptionValues().stream()
+				.map(OptionValueDto::from)
+				.collect(Collectors.toList()))
+			.build();
+	}
+
 	@Getter
 	@Builder
 	public static class OptionValueDto {
@@ -36,16 +47,5 @@ public class ResOptionDtoV1 {
 				.sortOrder(optionValue.getSortOrder())
 				.build();
 		}
-	}
-
-	public static ResOptionDtoV1 from(ProductOption option) {
-		return ResOptionDtoV1.builder()
-			.optionId(option.getId())
-			.name(option.getName())
-			.sortOrder(option.getSortOrder())
-			.values(option.getOptionValues().stream()
-				.map(OptionValueDto::from)
-				.collect(Collectors.toList()))
-			.build();
 	}
 }

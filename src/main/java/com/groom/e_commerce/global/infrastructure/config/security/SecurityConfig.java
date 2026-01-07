@@ -1,12 +1,11 @@
 package com.groom.e_commerce.global.infrastructure.config.security;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,7 +38,7 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				// 인증/회원가입
-				.requestMatchers("/auth/signup", "/auth/login").permitAll()
+				.requestMatchers("/api/v1/auth/signup", "/api/v1/auth/login").permitAll()
 
 				// 결제 관련 엔드포인트 (ready/success/fail/confirm 등 포함)
 				.requestMatchers("/api/v1/payments/**").permitAll()

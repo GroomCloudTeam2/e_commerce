@@ -1,13 +1,9 @@
 package com.groom.e_commerce.product.domain.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
 import com.groom.e_commerce.global.presentation.advice.CustomException;
@@ -67,7 +63,7 @@ public class Product extends BaseEntity {
 	private Boolean hasOptions;
 
 	@Column(name = "price", precision = 12, scale = 2)
-	private BigDecimal price;
+	private Long price;
 
 	@Column(name = "stock_quantity")
 	private Integer stockQuantity;
@@ -80,14 +76,14 @@ public class Product extends BaseEntity {
 
 	// 상품이 삭제되면 옵션들도 같이 삭제(Cascade)
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ProductOption> options = new ArrayList<>();
+	private final List<ProductOption> options = new ArrayList<>();
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ProductVariant> variants = new ArrayList<>();
+	private final List<ProductVariant> variants = new ArrayList<>();
 
 	@Builder
 	public Product(UUID ownerId, Category category, String title, String description,
-		String thumbnailUrl, Boolean hasOptions, BigDecimal price, Integer stockQuantity) {
+		String thumbnailUrl, Boolean hasOptions, Long price, Integer stockQuantity) {
 		this.ownerId = ownerId;
 		this.category = category;
 		this.title = title;
@@ -100,7 +96,7 @@ public class Product extends BaseEntity {
 	}
 
 	public void update(Category category, String title, String description, String thumbnailUrl,
-		BigDecimal price, Integer stockQuantity, ProductStatus status) {
+		Long price, Integer stockQuantity, ProductStatus status) {
 		if (category != null) {
 			this.category = category;
 		}

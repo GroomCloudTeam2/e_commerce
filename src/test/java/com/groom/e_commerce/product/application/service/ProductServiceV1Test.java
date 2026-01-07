@@ -1,11 +1,9 @@
 package com.groom.e_commerce.product.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -75,7 +73,7 @@ class ProductServiceV1Test {
 			.category(category)
 			.title("Test Product")
 			.description("Description")
-			.price(BigDecimal.valueOf(10000))
+			.price(Long.valueOf(10000))
 			.stockQuantity(100)
 			.hasOptions(false)
 			.build();
@@ -96,11 +94,11 @@ class ProductServiceV1Test {
 		// If DTO has no setters, this might fail, but let's assume setters or fields.
 		// Or I can use a library or just mock the DTO if it's an interface (unlikely).
 		// Wait, DTOs usually have data.
-		
+
 		// Let's assume request is populated via JSON deserialization in Controller,
 		// here I manually populate it.
 		// If fields are private and no setters, I might need ReflectionTestUtils.
-		
+
 		given(categoryService.findActiveCategoryById(any())).willReturn(category);
 		given(productRepository.save(any(Product.class))).willAnswer(invocation -> invocation.getArgument(0));
 
@@ -118,7 +116,7 @@ class ProductServiceV1Test {
 		// given
 		UUID productId = UUID.randomUUID();
 		ReqProductUpdateDtoV1 request = new ReqProductUpdateDtoV1();
-		
+
 		given(productRepository.findByIdAndNotDeleted(productId)).willReturn(Optional.of(product));
 		// Assuming request has data.
 
@@ -149,9 +147,9 @@ class ProductServiceV1Test {
 		// when & then
 		assertThatThrownBy(() -> productService.updateProduct(productId, request))
 			.isInstanceOf(CustomException.class)
-			.satisfies(e -> assertThat(((CustomException) e).getErrorCode()).isEqualTo(ErrorCode.PRODUCT_ACCESS_DENIED));
+			.satisfies(e -> assertThat(((CustomException)e).getErrorCode()).isEqualTo(ErrorCode.PRODUCT_ACCESS_DENIED));
 	}
-	
+
 	@Test
 	@DisplayName("상품 삭제 - 성공")
 	void deleteProduct_success() {

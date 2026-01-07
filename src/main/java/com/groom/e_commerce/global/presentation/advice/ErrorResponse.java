@@ -16,13 +16,6 @@ public class ErrorResponse {
 	private String message;
 	private List<ErrorDetail> details;
 
-	@Getter
-	@Builder
-	public static class ErrorDetail {
-		private String field;
-		private String reason;
-	}
-
 	public static ErrorResponse of(ErrorCode errorCode) {
 		return ErrorResponse.builder()
 			.code(errorCode.getCode())
@@ -36,5 +29,12 @@ public class ErrorResponse {
 			.message(errorCode.getMessage())
 			.details(details)
 			.build();
+	}
+
+	@Getter
+	@Builder
+	public static class ErrorDetail {
+		private String field;
+		private String reason;
 	}
 }

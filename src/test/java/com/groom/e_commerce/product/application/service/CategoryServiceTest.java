@@ -1,8 +1,7 @@
 package com.groom.e_commerce.product.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
 
 import java.util.ArrayList;
 import java.util.List;

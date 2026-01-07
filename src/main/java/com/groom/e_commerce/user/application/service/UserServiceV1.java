@@ -1,6 +1,5 @@
 package com.groom.e_commerce.user.application.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -104,7 +103,7 @@ public class UserServiceV1 {
 		log.info("Sales stats requested: userId={}, periodType={}, date={}", userId, periodType, date);
 
 		LocalDate targetDate = date != null ? date : LocalDate.now();
-		return List.of(ResSalesStatDtoV1.of(targetDate, BigDecimal.ZERO));
+		return List.of(ResSalesStatDtoV1.of(targetDate, 0L));
 	}
 
 	public UserEntity findUserById(UUID userId) {

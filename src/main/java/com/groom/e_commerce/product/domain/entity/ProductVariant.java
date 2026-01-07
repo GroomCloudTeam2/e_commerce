@@ -1,13 +1,10 @@
 package com.groom.e_commerce.product.domain.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import com.groom.e_commerce.global.domain.entity.BaseEntity;
@@ -57,7 +54,7 @@ public class ProductVariant extends BaseEntity {
 	private String optionName;
 
 	@Column(name = "price", nullable = false, precision = 12, scale = 2)
-	private BigDecimal price;
+	private Long price;
 
 	@Column(name = "stock_quantity", nullable = false)
 	private Integer stockQuantity;
@@ -68,7 +65,7 @@ public class ProductVariant extends BaseEntity {
 
 	@Builder
 	public ProductVariant(Product product, String skuCode, List<UUID> optionValueIds,
-		String optionName, BigDecimal price, Integer stockQuantity) {
+		String optionName, Long price, Integer stockQuantity) {
 		this.product = product;
 		this.skuCode = skuCode;
 		this.optionValueIds = optionValueIds;
@@ -78,7 +75,7 @@ public class ProductVariant extends BaseEntity {
 		this.status = VariantStatus.ON_SALE;
 	}
 
-	public void update(String optionName, BigDecimal price, Integer stockQuantity) {
+	public void update(String optionName, Long price, Integer stockQuantity) {
 		if (optionName != null) {
 			this.optionName = optionName;
 		}

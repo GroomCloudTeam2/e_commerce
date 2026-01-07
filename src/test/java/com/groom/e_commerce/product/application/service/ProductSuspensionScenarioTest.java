@@ -1,11 +1,9 @@
 package com.groom.e_commerce.product.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mockStatic;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -63,7 +61,7 @@ class ProductSuspensionScenarioTest {
 			.ownerId(ownerId)
 			.category(category)
 			.title("Test Product")
-			.price(BigDecimal.valueOf(10000))
+			.price(Long.valueOf(10000))
 			.stockQuantity(10)
 			.build();
 
@@ -85,7 +83,7 @@ class ProductSuspensionScenarioTest {
 		// when & then
 		assertThatThrownBy(() -> productService.getProductDetail(productId))
 			.isInstanceOf(CustomException.class)
-			.satisfies(e -> assertThat(((CustomException) e).getErrorCode()).isEqualTo(ErrorCode.PRODUCT_NOT_ON_SALE));
+			.satisfies(e -> assertThat(((CustomException)e).getErrorCode()).isEqualTo(ErrorCode.PRODUCT_NOT_ON_SALE));
 	}
 
 	@Test
@@ -94,7 +92,7 @@ class ProductSuspensionScenarioTest {
 		// given
 		product.suspend("Violation"); // 상품 정지
 		securityUtilMock.when(SecurityUtil::getCurrentUserId).thenReturn(ownerId);
-		
+
 		Page<Product> productPage = new PageImpl<>(Collections.singletonList(product));
 		given(productQueryRepository.findSellerProducts(eq(ownerId), any(), any(), any()))
 			.willReturn(productPage);
@@ -113,9 +111,9 @@ class ProductSuspensionScenarioTest {
 		// given
 		product.suspend("Violation"); // 먼저 정지
 		product.restore(); // 정지 해제 (상태가 ON_SALE로 변경됨)
-		
+
 		given(productRepository.findByIdWithCategory(productId)).willReturn(Optional.of(product));
-		
+
 		// when
 		ResProductDetailDtoV1 result = productService.getProductDetail(productId);
 

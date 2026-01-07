@@ -11,15 +11,16 @@ import com.groom.e_commerce.order.domain.entity.OrderItem;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
 	@Query("""
-    select count(oi) > 0
-    from OrderItem oi
-    where oi.order.orderId = :orderId
-      and oi.productId = :productId
-""")
+		    select count(oi) > 0
+		    from OrderItem oi
+		    where oi.order.orderId = :orderId
+		      and oi.productId = :productId
+		""")
 	boolean existsByOrderIdAndProductId(
 		@Param("orderId") UUID orderId,
 		@Param("productId") UUID productId
 	);
+
 	@Query("select oi from OrderItem oi join fetch oi.order where oi.orderItemId in :orderItemIds")
 	List<OrderItem> findAllByOrderItemIdIn(@Param("orderItemIds") List<UUID> orderItemIds);
 }

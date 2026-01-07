@@ -3,6 +3,7 @@ package com.groom.e_commerce.order.presentation.controller;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDetails;
 import com.groom.e_commerce.order.application.service.OrderService;
@@ -70,6 +70,7 @@ public class OrderController {
 		orderService.completeDelivery(request);
 		return ResponseEntity.ok("선택한 상품이 배송 완료 상태로 변경되었습니다.");
 	}
+
 	@Operation(summary = "구매 확정", description = "배송이 완료된 주문을 구매 확정 처리합니다.")
 	@PostMapping("/{orderId}/confirm")
 	public ResponseEntity<String> confirmOrder(

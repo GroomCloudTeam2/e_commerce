@@ -21,7 +21,7 @@ public class ResVariantDtoV1 {
 	private String skuCode;
 	private List<UUID> optionValueIds;
 	private String optionName;
-	private BigDecimal price;
+	private Long price;
 	private Integer stockQuantity;
 	private VariantStatus status;
 
