@@ -346,7 +346,7 @@ public class ProductServiceV1 {
 		Map<UUID, ProductVariant> variantMap = variantIds.isEmpty()
 			? Map.of()
 			: productVariantRepository.findByIdIn(new ArrayList<>(variantIds)).stream()
-				.collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
+			.collect(Collectors.toMap(ProductVariant::getId, Function.identity()));
 
 		// 3. DTO 변환 및 로직 적용
 		List<ProductCartInfo> result = new ArrayList<>();
@@ -387,7 +387,7 @@ public class ProductServiceV1 {
 			// 옵션 상품 차감
 			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
 				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-			
+
 			variant.decreaseStock(quantity);
 		} else {
 			// 단일 상품 차감
@@ -420,7 +420,7 @@ public class ProductServiceV1 {
 		if (variantId != null) {
 			ProductVariant variant = productVariantRepository.findByIdAndProductIdWithLock(variantId, productId)
 				.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
-			
+
 			variant.increaseStock(quantity);
 		} else {
 			Product product = productRepository.findByIdWithLock(productId)
@@ -442,5 +442,10 @@ public class ProductServiceV1 {
 		for (StockManagement item : items) {
 			increaseStock(item.getProductId(), item.getVariantId(), item.getQuantity());
 		}
+	}
+
+	public ProductVariant findVariantById(UUID variantId) {
+		return productVariantRepository.findById(variantId)
+			.orElseThrow(() -> new CustomException(ErrorCode.VARIANT_NOT_FOUND));
 	}
 }

@@ -1,5 +1,6 @@
 package com.groom.e_commerce.order.domain.entity;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 	private UUID buyerId;
 
 	@Column(name = "total_payment_amt", nullable = false)
-	private BigInteger totalPaymentAmount;
+	private Long totalPaymentAmount;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)
@@ -69,7 +70,7 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 
 	/* ================= 생성자 (Builder 패턴 권장) ================= */
 	@Builder
-	public Order(UUID buyerId, String orderNumber, BigInteger totalPaymentAmount,
+	public Order(UUID buyerId, String orderNumber, Long totalPaymentAmount,
 		String recipientName, String recipientPhone, String zipCode,
 		String shippingAddress, String shippingMemo) {
 		this.buyerId = buyerId;
@@ -86,8 +87,8 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 	/* ================= 상태 전이 메서드 ================= */
 
 	// 결제 금액 업데이트
-	public void updatePaymentAmount(long totalAmount) {
-		this.totalPaymentAmount = BigInteger.valueOf(totalAmount);
+	public void updatePaymentAmount(Long totalAmount) {
+		this.totalPaymentAmount = totalAmount;
 	}
 
 	// 결제 완료 (PENDING → PAID)
@@ -116,6 +117,22 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 
 		for (OrderItem orderItem : this.item) {
 			orderItem.cancel();
+		}
+	}
+	public void cancelItems(List<UUID> targetItemIds) {
+		// 1. 내 장바구니(items)에서 취소 대상들을 찾아서 각각 취소시킨다.
+		for (OrderItem item : this.item) { // 변수명 item -> orderItems로 바꿨다고 가정
+			if (targetItemIds.contains(item.getOrderItemId())) {
+				item.cancel(); // ★ OrderItem에 이 메서드 필요
+			}
+		}
+
+		// 2. (선택사항) 만약 모든 아이템이 다 취소되었으면, 주문 전체 상태도 CANCELLED로 바꿀지 결정
+		boolean allCancelled = this.item.stream()
+			.allMatch(item -> item.getItemStatus() == OrderStatus.CANCELLED);
+
+		if (allCancelled) {
+			this.status = OrderStatus.CANCELLED;
 		}
 	}
 
