@@ -40,7 +40,7 @@ public class OrderItem extends BaseEntity {
 	@Column(name = "product_id", nullable = false)
 	private UUID productId;
 
-	@Column(name = "variant_id", nullable = false)
+	@Column(name = "variant_id")
 	private UUID variantId;
 
 	@Column(name = "owner_id", nullable = false)

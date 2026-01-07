@@ -140,6 +140,7 @@ public class OrderService {
 			.orderId(order.getOrderId())
 			.amount(totalAmount)
 			.status(PaymentStatus.READY)
+			.pgProvider("TOSS")
 			.build();
 
 		paymentRepository.save(payment);
