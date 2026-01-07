@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 
 @Tag(name = "User", description = "사용자 API")
 @RestController
-@RequestMapping("/users/me")
+@RequestMapping("/api/v1/users/me")
 @RequiredArgsConstructor
 public class UserControllerV1 {
 
