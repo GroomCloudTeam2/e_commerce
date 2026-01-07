@@ -6,9 +6,18 @@ import lombok.Getter;
 
 @Getter
 public class UpdateReviewRequest {
+
 	@Min(1)
 	@Max(5)
 	private Integer rating;
 
 	private String content;
+
+	protected UpdateReviewRequest() {
+	}
+
+	public UpdateReviewRequest(String content, Integer rating) {
+		this.content = content;
+		this.rating = rating;
+	}
 }

@@ -1,18 +1,12 @@
 package com.groom.e_commerce.product.presentation.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -25,12 +19,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,12 +63,6 @@ class ProductControllerV1Test {
 
 	@MockitoBean
 	private ProductVariantServiceV1 productVariantService;
-
-	@TestConfiguration
-	@EnableMethodSecurity(prePostEnabled = true)
-	static class SecurityTestConfig {
-	}
-
 	private UUID productId;
 	private UUID categoryId;
 	private UUID variantId;
@@ -97,7 +85,7 @@ class ProductControllerV1Test {
 
 		given(productService.createProduct(any(ReqProductCreateDtoV1.class)))
 			.willReturn(response);
-		
+
 		String jsonContent = """
 			{
 				"categoryId": "%s",
@@ -126,7 +114,7 @@ class ProductControllerV1Test {
 			.productId(productId)
 			.title("My Product")
 			.build();
-		
+
 		given(productService.getSellerProducts(any(), any(), any(Pageable.class)))
 			.willReturn(new PageImpl<>(Collections.singletonList(listDto)));
 
@@ -179,7 +167,7 @@ class ProductControllerV1Test {
 			.andDo(print())
 			.andExpect(status().isNoContent());
 	}
-	
+
 	@Test
 	@DisplayName("권한 없는 사용자 접근 시 403")
 	@WithMockUser(roles = "USER")
@@ -211,7 +199,7 @@ class ProductControllerV1Test {
 			.optionId(UUID.randomUUID())
 			.name("Color")
 			.build();
-		
+
 		given(productOptionService.updateOptions(eq(productId), any(ReqOptionUpdateDtoV1.class)))
 			.willReturn(List.of(optionDto));
 
@@ -246,7 +234,7 @@ class ProductControllerV1Test {
 			.optionId(UUID.randomUUID())
 			.name("Color")
 			.build();
-		
+
 		given(productOptionService.getOptions(productId))
 			.willReturn(List.of(optionDto));
 
@@ -343,5 +331,10 @@ class ProductControllerV1Test {
 				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isNoContent());
+	}
+
+	@TestConfiguration
+	@EnableMethodSecurity(prePostEnabled = true)
+	static class SecurityTestConfig {
 	}
 }

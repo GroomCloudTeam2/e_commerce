@@ -51,18 +51,18 @@ public class PaymentCancel {
 		this.canceledAt = canceledAt;
 	}
 
-	void setPayment(Payment payment) {
-		this.payment = payment;
-	}
-
-	// ===== getters =====
-
 	public UUID getCancelId() {
 		return cancelId;
 	}
 
+	// ===== getters =====
+
 	public Payment getPayment() {
 		return payment;
+	}
+
+	void setPayment(Payment payment) {
+		this.payment = payment;
 	}
 
 	public String getPaymentKey() {

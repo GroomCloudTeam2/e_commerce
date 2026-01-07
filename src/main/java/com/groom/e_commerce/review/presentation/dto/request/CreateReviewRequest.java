@@ -9,6 +9,7 @@ import lombok.Getter;
 // CreateReviewRequest.java
 @Getter
 public class CreateReviewRequest {
+
 	@Min(1)
 	@Max(5)
 	@NotNull(message = "평점은 필수입니다.")
@@ -17,4 +18,12 @@ public class CreateReviewRequest {
 	@NotBlank(message = "리뷰 내용을 입력해주세요.")
 	private String content;
 
+	protected CreateReviewRequest() {
+	}
+
+	public CreateReviewRequest(Integer rating, String content) {
+		this.rating = rating;
+		this.content = content;
+	}
 }
+

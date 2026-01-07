@@ -1,13 +1,15 @@
 package com.groom.e_commerce.claim.presentation.dto;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import com.groom.e_commerce.claim.domain.entity.Claim;
 import com.groom.e_commerce.claim.domain.status.ClaimStatus;
 import com.groom.e_commerce.claim.domain.status.ClaimType;
-import com.groom.e_commerce.claim.domain.entity.Claim;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.util.UUID;
-import java.time.LocalDateTime;
 
 public class ClaimDto {
 
