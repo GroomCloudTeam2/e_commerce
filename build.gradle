@@ -63,6 +63,10 @@ dependencies {
     annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
+    // Testcontainers
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.7'
+    testImplementation 'org.testcontainers:postgresql:1.19.7'
 }
 
 tasks.named('test') {
