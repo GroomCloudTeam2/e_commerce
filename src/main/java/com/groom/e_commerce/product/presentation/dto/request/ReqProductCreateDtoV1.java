@@ -35,7 +35,7 @@ public class ReqProductCreateDtoV1 {
 	private Boolean hasOptions;
 
 	@PositiveOrZero(message = "가격은 0 이상이어야 합니다.")
-	private BigDecimal price;
+	private Long price;
 
 	@PositiveOrZero(message = "재고는 0 이상이어야 합니다.")
 	private Integer stockQuantity;
@@ -90,7 +90,7 @@ public class ReqProductCreateDtoV1 {
 
 		@NotNull(message = "가격은 필수입니다.")
 		@PositiveOrZero(message = "가격은 0 이상이어야 합니다.")
-		private BigDecimal price;
+		private Long price;
 
 		@NotNull(message = "재고는 필수입니다.")
 		@PositiveOrZero(message = "재고는 0 이상이어야 합니다.")

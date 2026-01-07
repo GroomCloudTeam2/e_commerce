@@ -29,7 +29,7 @@ public class ReqProductUpdateDtoV1 {
 	private String thumbnailUrl;
 
 	@PositiveOrZero(message = "가격은 0 이상이어야 합니다.")
-	private BigDecimal price;
+	private Long price;
 
 	@PositiveOrZero(message = "재고는 0 이상이어야 합니다.")
 	private Integer stockQuantity;
