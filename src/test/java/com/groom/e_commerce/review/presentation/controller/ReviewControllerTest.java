@@ -21,6 +21,7 @@ import com.groom.e_commerce.review.application.service.ReviewService;
 import com.groom.e_commerce.review.presentation.dto.request.CreateReviewRequest;
 import com.groom.e_commerce.review.presentation.dto.request.UpdateReviewRequest;
 import com.groom.e_commerce.review.presentation.dto.response.ReviewResponse;
+import com.groom.e_commerce.user.domain.entity.user.UserRole;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewControllerTest {
@@ -29,8 +30,11 @@ class ReviewControllerTest {
 	private static final UUID REVIEW_ID = UUID.randomUUID();
 	private static final UUID ORDER_ID = UUID.randomUUID();
 	private static final UUID PRODUCT_ID = UUID.randomUUID();
+	private static final UserRole USER_ROLE = UserRole.USER;
+
 	private MockMvc mockMvc;
 	private ObjectMapper objectMapper;
+
 	@Mock
 	private ReviewService reviewService;
 
@@ -38,17 +42,21 @@ class ReviewControllerTest {
 	void setUp() {
 		ReviewController controller =
 			new ReviewController(reviewService) {
-				// SecurityUtil 대체
 				@Override
 				protected UUID getCurrentUserId() {
 					return USER_ID;
+				}
+
+				@Override
+				protected UserRole getCurrentUserRole() {
+					return USER_ROLE;
 				}
 			};
 
 		mockMvc = MockMvcBuilders
 			.standaloneSetup(controller)
-			.setControllerAdvice() // ⬅️ 아무 Advice도 등록하지 않음
 			.build();
+
 		objectMapper = new ObjectMapper();
 	}
 
@@ -72,7 +80,7 @@ class ReviewControllerTest {
 		when(reviewService.getReview(REVIEW_ID, USER_ID))
 			.thenReturn(mock(ReviewResponse.class));
 
-		mockMvc.perform(get("/reviews/{reviewId}", REVIEW_ID))
+		mockMvc.perform(get("/reviews/me/{reviewId}", REVIEW_ID))
 			.andExpect(status().isOk());
 	}
 
@@ -96,7 +104,7 @@ class ReviewControllerTest {
 		mockMvc.perform(delete("/reviews/{reviewId}", REVIEW_ID))
 			.andExpect(status().isNoContent());
 
-		verify(reviewService).deleteReview(REVIEW_ID, USER_ID);
+		verify(reviewService).deleteReview(REVIEW_ID, USER_ID, USER_ROLE);
 	}
 
 	@Test

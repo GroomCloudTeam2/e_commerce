@@ -22,7 +22,9 @@ import com.groom.e_commerce.review.presentation.dto.response.ProductReviewRespon
 class ProductReviewControllerTest {
 
 	private static final UUID PRODUCT_ID = UUID.randomUUID();
+
 	private MockMvc mockMvc;
+
 	@Mock
 	private ReviewService reviewService;
 
@@ -44,7 +46,7 @@ class ProductReviewControllerTest {
 		)).thenReturn(mock(ProductReviewResponse.class));
 
 		// when & then
-		mockMvc.perform(get("/products/{productId}/reviews", PRODUCT_ID))
+		mockMvc.perform(get("/reviews/product/{productId}/", PRODUCT_ID))
 			.andExpect(status().isOk());
 
 		verify(reviewService).getProductReviews(
@@ -60,10 +62,12 @@ class ProductReviewControllerTest {
 		)).thenReturn(mock(ProductReviewResponse.class));
 
 		// when & then
-		mockMvc.perform(get("/products/{productId}/reviews", PRODUCT_ID)
-				.param("page", "2")
-				.param("size", "5")
-				.param("sort", "like"))
+		mockMvc.perform(
+				get("/reviews/product/{productId}/", PRODUCT_ID)
+					.param("page", "2")
+					.param("size", "5")
+					.param("sort", "like")
+			)
 			.andExpect(status().isOk());
 
 		verify(reviewService).getProductReviews(

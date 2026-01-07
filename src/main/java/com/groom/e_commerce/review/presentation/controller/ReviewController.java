@@ -44,6 +44,10 @@ public class ReviewController {
 		return SecurityUtil.getCurrentUserId();
 	}
 
+	protected UserRole getCurrentUserRole(){
+		return SecurityUtil.getCurrentUserRole();
+	}
+
 	@Operation(summary = "내 주문에 대한 특정 상품 리뷰 작성")
 	@PostMapping("/{orderId}/items/{productId}")
 	@ResponseStatus(HttpStatus.CREATED)
@@ -90,16 +94,15 @@ public class ReviewController {
 	@Operation(summary = "권한에 따른 리뷰 삭제")
 	@DeleteMapping("/{reviewId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void deleteReview(
-		@PathVariable UUID reviewId,
-		@AuthenticationPrincipal CustomUserDetails userDetails
-	) {
+	public void deleteReview(@PathVariable UUID reviewId) {
 		reviewService.deleteReview(
 			reviewId,
-			userDetails.getUserId(),
-			UserRole.valueOf(userDetails.getRole())
+			getCurrentUserId(),
+			getCurrentUserRole()
 		);
 	}
+
+
 
 	@Operation(summary = "리뷰 좋아요")
 	@PostMapping("/{reviewId}/like")
