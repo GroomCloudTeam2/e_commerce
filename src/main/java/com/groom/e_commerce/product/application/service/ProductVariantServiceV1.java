@@ -116,6 +116,7 @@ public class ProductVariantServiceV1 {
 		if (hasOrders) {
 			variant.discontinue();
 		} else {
+			product.getVariants().remove(variant);
 			productVariantRepository.delete(variant);
 		}
 	}

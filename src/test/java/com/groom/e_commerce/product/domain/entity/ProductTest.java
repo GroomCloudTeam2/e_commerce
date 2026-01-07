@@ -9,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.groom.e_commerce.global.presentation.advice.CustomException;
+import com.groom.e_commerce.global.presentation.advice.ErrorCode;
 import com.groom.e_commerce.product.domain.enums.ProductStatus;
 
 class ProductTest {
@@ -23,7 +25,7 @@ class ProductTest {
 			// given
 			Product product = Product.builder()
 				.stockQuantity(10)
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.build();
 
 			// when
@@ -40,7 +42,7 @@ class ProductTest {
 			// given
 			Product product = Product.builder()
 				.stockQuantity(10)
-				.price(BigDecimal.valueOf(10000))
+				.price(Long.valueOf(10000))
 				.build();
 
 			// when
@@ -59,8 +61,8 @@ class ProductTest {
 
 			// when & then
 			assertThatThrownBy(() -> product.decreaseStock(10))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessage("재고가 부족합니다.");
+				.isInstanceOf(CustomException.class)
+				.satisfies(e -> assertThat(((CustomException) e).getErrorCode()).isEqualTo(ErrorCode.STOCK_NOT_ENOUGH));
 		}
 	}
 

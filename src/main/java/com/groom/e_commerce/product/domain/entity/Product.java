@@ -1,6 +1,5 @@
 package com.groom.e_commerce.product.domain.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +63,7 @@ public class Product extends BaseEntity {
 	private Boolean hasOptions;
 
 	@Column(name = "price", precision = 12, scale = 2)
-	private BigDecimal price;
+	private Long price;
 
 	@Column(name = "stock_quantity")
 	private Integer stockQuantity;
@@ -84,7 +83,7 @@ public class Product extends BaseEntity {
 
 	@Builder
 	public Product(UUID ownerId, Category category, String title, String description,
-		String thumbnailUrl, Boolean hasOptions, BigDecimal price, Integer stockQuantity) {
+		String thumbnailUrl, Boolean hasOptions, Long price, Integer stockQuantity) {
 		this.ownerId = ownerId;
 		this.category = category;
 		this.title = title;
@@ -97,7 +96,7 @@ public class Product extends BaseEntity {
 	}
 
 	public void update(Category category, String title, String description, String thumbnailUrl,
-		BigDecimal price, Integer stockQuantity, ProductStatus status) {
+		Long price, Integer stockQuantity, ProductStatus status) {
 		if (category != null) {
 			this.category = category;
 		}

@@ -73,7 +73,7 @@ class ProductServiceV1Test {
 			.category(category)
 			.title("Test Product")
 			.description("Description")
-			.price(BigDecimal.valueOf(10000))
+			.price(Long.valueOf(10000))
 			.stockQuantity(100)
 			.hasOptions(false)
 			.build();

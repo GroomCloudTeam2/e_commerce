@@ -132,7 +132,7 @@ class ProductControllerV1Test {
 		ResProductDtoV1 response = ResProductDtoV1.builder()
 			.id(productId)
 			.title("Updated Product")
-			.price(BigDecimal.valueOf(25000))
+			.price(Long.valueOf(25000))
 			.build();
 
 		given(productService.updateProduct(eq(productId), any(ReqProductUpdateDtoV1.class)))

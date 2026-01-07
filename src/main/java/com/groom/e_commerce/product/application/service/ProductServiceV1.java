@@ -1,6 +1,5 @@
 package com.groom.e_commerce.product.application.service;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -244,8 +243,8 @@ public class ProductServiceV1 {
 	public Page<ResProductSearchDtoV1> searchProducts(
 		UUID categoryId,
 		String keyword,
-		BigDecimal minPrice,
-		BigDecimal maxPrice,
+		Long minPrice,
+		Long maxPrice,
 		ProductSortType sortType,
 		Pageable pageable
 	) {

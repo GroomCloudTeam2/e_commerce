@@ -61,7 +61,7 @@ class ProductSuspensionScenarioTest {
 			.ownerId(ownerId)
 			.category(category)
 			.title("Test Product")
-			.price(BigDecimal.valueOf(10000))
+			.price(Long.valueOf(10000))
 			.stockQuantity(10)
 			.build();
 

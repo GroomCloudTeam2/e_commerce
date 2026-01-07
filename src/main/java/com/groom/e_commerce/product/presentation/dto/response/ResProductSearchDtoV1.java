@@ -20,8 +20,8 @@ public class ResProductSearchDtoV1 {
 	private String title;
 	private String thumbnailUrl;
 	private ProductStatus status;
-	private BigDecimal minPrice;
-	private BigDecimal maxPrice;
+	private Long minPrice;
+	private Long maxPrice;
 	private Double avgRating;
 	private Integer reviewCount;
 	private String categoryName;
@@ -29,17 +29,17 @@ public class ResProductSearchDtoV1 {
 
 	public static ResProductSearchDtoV1 from(Product product) {
 		// 옵션이 있는 경우 variant 가격 범위 계산
-		BigDecimal minPrice = product.getPrice();
-		BigDecimal maxPrice = product.getPrice();
+		Long minPrice = product.getPrice();
+		Long maxPrice = product.getPrice();
 
 		if (product.getHasOptions() && product.getVariants() != null && !product.getVariants().isEmpty()) {
 			minPrice = product.getVariants().stream()
 				.map(v -> v.getPrice())
-				.min(BigDecimal::compareTo)
+				.min(Long::compareTo)
 				.orElse(product.getPrice());
 			maxPrice = product.getVariants().stream()
 				.map(v -> v.getPrice())
-				.max(BigDecimal::compareTo)
+				.max(Long::compareTo)
 				.orElse(product.getPrice());
 		}
 
@@ -57,19 +57,18 @@ public class ResProductSearchDtoV1 {
 			.build();
 	}
 
-	public static ResProductSearchDtoV1 from(Product product, Double avgRating, Integer reviewCount,
-		String ownerStoreName) {
-		BigDecimal minPrice = product.getPrice();
-		BigDecimal maxPrice = product.getPrice();
+	public static ResProductSearchDtoV1 from(Product product, Double avgRating, Integer reviewCount, String ownerStoreName) {
+		Long minPrice = product.getPrice();
+		Long maxPrice = product.getPrice();
 
 		if (product.getHasOptions() && product.getVariants() != null && !product.getVariants().isEmpty()) {
 			minPrice = product.getVariants().stream()
 				.map(v -> v.getPrice())
-				.min(BigDecimal::compareTo)
+				.min(Long::compareTo)
 				.orElse(product.getPrice());
 			maxPrice = product.getVariants().stream()
 				.map(v -> v.getPrice())
-				.max(BigDecimal::compareTo)
+				.max(Long::compareTo)
 				.orElse(product.getPrice());
 		}
 

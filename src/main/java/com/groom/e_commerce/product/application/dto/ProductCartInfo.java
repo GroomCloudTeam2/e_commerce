@@ -1,6 +1,5 @@
 package com.groom.e_commerce.product.application.dto;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.groom.e_commerce.product.domain.entity.Product;
@@ -23,7 +22,7 @@ public class ProductCartInfo {
 	private String productName;
 	private String optionName;   // 옵션이 없는 경우 null (예: "Red / L")
 	private String thumbnailUrl;
-	private BigDecimal price;    // 옵션 유무에 따른 최종 단가
+	private Long price;    // 옵션 유무에 따른 최종 단가
 	private Integer stockQuantity; // 현재 시점의 실시간 재고
 	private boolean isAvailable;
 

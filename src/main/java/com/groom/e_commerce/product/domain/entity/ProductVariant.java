@@ -54,7 +54,7 @@ public class ProductVariant extends BaseEntity {
 	private String optionName;
 
 	@Column(name = "price", nullable = false, precision = 12, scale = 2)
-	private BigDecimal price;
+	private Long price;
 
 	@Column(name = "stock_quantity", nullable = false)
 	private Integer stockQuantity;
@@ -65,7 +65,7 @@ public class ProductVariant extends BaseEntity {
 
 	@Builder
 	public ProductVariant(Product product, String skuCode, List<UUID> optionValueIds,
-		String optionName, BigDecimal price, Integer stockQuantity) {
+		String optionName, Long price, Integer stockQuantity) {
 		this.product = product;
 		this.skuCode = skuCode;
 		this.optionValueIds = optionValueIds;
@@ -75,7 +75,7 @@ public class ProductVariant extends BaseEntity {
 		this.status = VariantStatus.ON_SALE;
 	}
 
-	public void update(String optionName, BigDecimal price, Integer stockQuantity) {
+	public void update(String optionName, Long price, Integer stockQuantity) {
 		if (optionName != null) {
 			this.optionName = optionName;
 		}
