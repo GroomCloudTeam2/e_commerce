@@ -119,6 +119,22 @@ public class Order extends BaseEntity { // Audit(생성일시 등) 적용
 			orderItem.cancel();
 		}
 	}
+	public void cancelItems(List<UUID> targetItemIds) {
+		// 1. 내 장바구니(items)에서 취소 대상들을 찾아서 각각 취소시킨다.
+		for (OrderItem item : this.item) { // 변수명 item -> orderItems로 바꿨다고 가정
+			if (targetItemIds.contains(item.getOrderItemId())) {
+				item.cancel(); // ★ OrderItem에 이 메서드 필요
+			}
+		}
+
+		// 2. (선택사항) 만약 모든 아이템이 다 취소되었으면, 주문 전체 상태도 CANCELLED로 바꿀지 결정
+		boolean allCancelled = this.item.stream()
+			.allMatch(item -> item.getItemStatus() == OrderStatus.CANCELLED);
+
+		if (allCancelled) {
+			this.status = OrderStatus.CANCELLED;
+		}
+	}
 
 	// 구매 확정 (DELIVERED → CONFIRMED)
 	public void confirm() {

@@ -5,6 +5,8 @@ import com.groom.e_commerce.order.domain.entity.Order;
 import com.groom.e_commerce.order.domain.entity.OrderItem;
 import com.groom.e_commerce.order.domain.repository.OrderItemRepository;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCancelRequest;
+import com.groom.e_commerce.product.application.dto.StockManagement;
+import com.groom.e_commerce.product.application.service.ProductServiceV1;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +20,7 @@ public class OrderCancelService {
 
 	private final OrderItemRepository orderItemRepository;
 	private final PaymentPort paymentPort;// 결제 담당자가 구현할 인터페이스
-	// private final ProductService productService; // 재고 담당 서비스
+	private final ProductServiceV1 productServiceV1;
 
 	@Transactional
 	public void cancelOrderItems(Long userId, OrderCancelRequest request) {
@@ -47,11 +49,14 @@ public class OrderCancelService {
 		paymentPort.cancelPayment(orderId, totalCancelAmount, request.orderItemIds());
 
 		// // 5. 후처리 (결제 취소 성공 시 실행됨)
-		items.forEach(item -> {
-			item.cancel();
-		// 상태 변경 (CANCELLED)
-		// 	productService.increaseStock(item.getProductId(), item.getQuantity()); // 재고 복구
-		});
+		items.forEach(OrderItem::cancel);
+		List<StockManagement> stockManagements = items.stream()
+			.map(item -> StockManagement.of(
+				item.getProductId(),
+				item.getVariantId(),
+				item.getQuantity()))
+			.toList();
+		productServiceV1.increaseStockBulk(stockManagements);
 
 		// (선택) 주문 전체 취소 동기화 로직은 여기에 추가
 

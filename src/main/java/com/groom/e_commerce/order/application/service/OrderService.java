@@ -174,19 +174,16 @@ public class OrderService {
 
 
 		// 3. 재고 복구 요청 (Product Service 연동)
-		// OrderItem 리스트를 순회하며 각 상품의 수량만큼 재고를 다시 늘려줍니다.
-		for (OrderItem item : order.getItem()) {
+		List<StockManagement> stockManagements = order.getItem().stream()
+		         .map(orderItem -> StockManagement.of(
+			             orderItem.getProductId(),
+			             orderItem.getVariantId(),
+			             orderItem.getQuantity()))
+				 .toList();
 
-			// 상품 서비스에 재고 증가(복구) 요청
+		     // 한 번만 호출
+		     productServiceV1.increaseStockBulk(stockManagements);
 
-			List<StockManagement> stockManagements = order.getItem().stream()
-				.map(orderItem -> StockManagement.of(
-					orderItem.getProductId(),
-					orderItem.getVariantId(),
-					orderItem.getQuantity()))
-				.toList();
-			productServiceV1.increaseStockBulk(stockManagements);
-		}
 
 		// 4. (선택) 결제 취소 로직
 		// if (order.getStatus() == OrderStatus.PAID) {
@@ -219,10 +216,11 @@ public class OrderService {
 		List<OrderItem> items = orderItemRepository.findAllByOrderItemIdIn(request.orderItemIds());
 		items.forEach(OrderItem::startShipping);
 
-		// 2. 주문 상태 동기화 (이 부분이 훨씬 깔끔해집니다!)
-		Set<Order> orders = items.stream()
-			.map(OrderItem::getOrder)
-			.collect(Collectors.toSet());
+		List<UUID> orderIds =items.stream()
+			.map(item -> item.getOrder().getOrderId())
+			.distinct()
+			.toList();
+		List<Order> orders=orderRepository.findAllWithItemsByIdIn(orderIds);
 
 		for (Order order : orders) {
 			order.syncStatus(); // 엔티티가 스스로 상태를 계산하도록 위임

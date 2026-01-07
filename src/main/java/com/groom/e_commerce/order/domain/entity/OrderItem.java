@@ -86,6 +86,9 @@ public class OrderItem extends BaseEntity {
 	}
 
 	public void cancel() {
+		if (this.itemStatus == OrderStatus.SHIPPING || this.itemStatus == OrderStatus.DELIVERED) {
+			throw new IllegalStateException("이미 배송된 상품은 취소할 수 없습니다.");
+		}
 		this.itemStatus = OrderStatus.CANCELLED;
 	}
 
