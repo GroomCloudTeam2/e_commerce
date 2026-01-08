@@ -24,7 +24,7 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, UUID> {
 		    SELECT r FROM ReviewEntity r
 		    WHERE r.productId = :productId
 		      AND r.category = :category
-		    ORDER BY r.likeCount DESC, r.createdAt DESC
+		    ORDER BY r.createdAt DESC, r.likeCount DESC
 		""")
 	List<ReviewEntity> findTopReviews(
 		UUID productId,

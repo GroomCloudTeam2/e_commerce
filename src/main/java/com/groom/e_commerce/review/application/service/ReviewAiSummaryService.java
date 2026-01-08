@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.groom.e_commerce.global.infrastructure.client.OpenAi.OpenAiRestClient;
+import com.groom.e_commerce.product.domain.entity.Product;
 import com.groom.e_commerce.product.domain.repository.ProductRepository;
 import com.groom.e_commerce.review.application.support.AiReviewPromptBuilder;
 import com.groom.e_commerce.review.domain.entity.ProductRatingEntity;
@@ -45,7 +46,8 @@ public class ReviewAiSummaryService {
 							PageRequest.of(0, 10)
 						)
 					));
-		String productTitle = productRepository.findTitleById(productId)
+		String productTitle = productRepository.findByIdAndNotDeleted(productId)
+			.map(Product::getTitle)
 			.orElseThrow(() -> new IllegalStateException("상품 제목이 없습니다."));
 		String prompt = promptBuilder.build(productTitle, reviews);
 		String aiReview = openAiRestClient.summarizeReviews(prompt);
