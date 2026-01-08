@@ -5,19 +5,13 @@
     <meta content="width=device-width,initial-scale=1" name="viewport"/>
     <title>Toss 결제 테스트</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
             background: #f7f7f7;
             min-height: 100vh;
             padding: 0;
         }
-
         .header {
             background: white;
             border-bottom: 1px solid #e5e5e5;
@@ -26,32 +20,16 @@
             top: 0;
             z-index: 100;
         }
+        .header-title { font-size: 18px; font-weight: 600; color: #111; }
 
-        .header-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #111;
-        }
-
-        .container {
-            max-width: 640px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
+        .container { max-width: 640px; margin: 0 auto; padding: 20px; }
         .section {
             background: white;
             border-radius: 8px;
             padding: 24px 20px;
             margin-bottom: 12px;
         }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111;
-            margin-bottom: 20px;
-        }
+        .section-title { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 20px; }
 
         .order-info {
             display: flex;
@@ -60,52 +38,21 @@
             padding-bottom: 20px;
             border-bottom: 1px solid #f0f0f0;
         }
-
         .product-image {
-            width: 80px;
-            height: 80px;
+            width: 80px; height: 80px;
             background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             font-size: 32px;
             flex-shrink: 0;
         }
+        .product-info { flex: 1; }
+        .product-name { font-size: 15px; font-weight: 500; color: #111; margin-bottom: 6px; }
+        .product-price { font-size: 18px; font-weight: 700; color: #111; }
 
-        .product-info {
-            flex: 1;
-        }
-
-        .product-name {
-            font-size: 15px;
-            font-weight: 500;
-            color: #111;
-            margin-bottom: 6px;
-        }
-
-        .product-price {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
+        .form-group { margin-bottom: 20px; }
+        .form-group:last-child { margin-bottom: 0; }
+        label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
         input {
             width: 100%;
             padding: 14px 16px;
@@ -116,47 +63,24 @@
             outline: none;
             background: #fafafa;
         }
+        input:focus { border-color: #4285f4; background: white; }
+        input::placeholder { color: #999; }
 
-        input:focus {
-            border-color: #4285f4;
-            background: white;
-        }
-
-        input::placeholder {
-            color: #999;
-        }
-
-        .price-summary {
-            padding-top: 20px;
-        }
-
+        .price-summary { padding-top: 20px; }
         .price-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 12px;
             font-size: 15px;
             color: #666;
         }
-
         .price-row.total {
             padding-top: 12px;
             border-top: 1px solid #f0f0f0;
             margin-top: 12px;
             margin-bottom: 0;
         }
-
-        .price-row.total .label {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111;
-        }
-
-        .price-row.total .value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #4285f4;
-        }
+        .price-row.total .label { font-size: 16px; font-weight: 600; color: #111; }
+        .price-row.total .value { font-size: 22px; font-weight: 700; color: #4285f4; }
 
         .btn-pay {
             width: 100%;
@@ -171,35 +95,20 @@
             transition: all 0.2s ease;
             margin-top: 12px;
         }
+        .btn-pay:hover { background: #3367d6; }
+        .btn-pay:active { transform: scale(0.98); }
+        .btn-pay:disabled { background: #9dbcf7; cursor: not-allowed; }
 
-        .btn-pay:hover {
-            background: #3367d6;
-        }
-
-        .btn-pay:active {
-            transform: scale(0.98);
-        }
-
-        .log-section {
-            margin-top: 12px;
-        }
-
+        .log-section { margin-top: 12px; }
         .log-container {
             padding: 16px;
             background: #f5f5f5;
             border-radius: 4px;
             border: 1px solid #e0e0e0;
-            max-height: 200px;
+            max-height: 260px;
             overflow-y: auto;
         }
-
-        .log-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
+        .log-title { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px; }
         #log {
             font-family: 'Courier New', monospace;
             font-size: 12px;
@@ -208,14 +117,7 @@
             word-break: break-word;
             line-height: 1.6;
         }
-
-        .info-text {
-            font-size: 13px;
-            color: #999;
-            margin-top: 8px;
-            line-height: 1.5;
-        }
-
+        .info-text { font-size: 13px; color: #999; margin-top: 8px; line-height: 1.5; }
         .badge {
             display: inline-block;
             padding: 4px 8px;
@@ -226,18 +128,23 @@
             border-radius: 3px;
             margin-bottom: 12px;
         }
+        .hint {
+            font-size: 12px;
+            color: #666;
+            background: #fff7e6;
+            border: 1px solid #ffe0a3;
+            padding: 10px 12px;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
 
         @media (max-width: 640px) {
-            .container {
-                padding: 12px;
-            }
-
-            .section {
-                padding: 20px 16px;
-            }
+            .container { padding: 12px; }
+            .section { padding: 20px 16px; }
         }
     </style>
 </head>
+
 <body>
 <div class="header">
     <div class="header-title">주문/결제</div>
@@ -249,7 +156,7 @@
         <div class="order-info">
             <div class="product-image">📦</div>
             <div class="product-info">
-                <div class="product-name">테스트 상품</div>
+                <div class="product-name" id="productName">테스트 상품</div>
                 <div class="product-price" id="displayAmount">-</div>
             </div>
         </div>
@@ -269,6 +176,12 @@
             <label for="amount">결제금액</label>
             <input id="amount" min="1" placeholder="예: 15000" type="number"/>
             <div class="info-text">1원 이상 금액을 입력해주세요</div>
+        </div>
+
+        <div class="hint" style="margin-top: 12px;">
+            ✅ 팁: URL에 쿼리 파라미터를 붙이면 자동 입력돼요.<br/>
+            예) <b>/toss-test.html?orderId=UUID&amount=15000&auto=1</b><br/>
+            auto=1이면 자동으로 결제 버튼을 눌러요(테스트용).
         </div>
     </div>
 
@@ -292,7 +205,7 @@
 
     <button class="btn-pay" id="btn">결제하기</button>
 
-    <div class="log-section" id="logContainer" style="display: none;">
+    <div class="log-section" id="logContainer" style="display:none;">
         <div class="log-container">
             <div class="log-title">처리 로그</div>
             <pre id="log"></pre>
@@ -302,88 +215,143 @@
 
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
+    // ===== DOM =====
     const $log = document.getElementById("log");
     const $logContainer = document.getElementById("logContainer");
+    const $btn = document.getElementById("btn");
+
+    const $orderId = document.getElementById("orderId");
     const $amount = document.getElementById("amount");
     const $displayAmount = document.getElementById("displayAmount");
     const $itemPrice = document.getElementById("itemPrice");
     const $finalPrice = document.getElementById("finalPrice");
 
-    const formatPrice = (price) => {
-        return price.toLocaleString('ko-KR') + '원';
-    };
+    // ===== Utils =====
+    const formatPrice = (price) => price.toLocaleString("ko-KR") + "원";
 
-    $amount.addEventListener("input", (e) => {
-        const value = Number(e.target.value);
+    const showAmount = (value) => {
         if (value > 0) {
             const formatted = formatPrice(value);
             $displayAmount.textContent = formatted;
             $itemPrice.textContent = formatted;
             $finalPrice.textContent = formatted;
         } else {
-            $displayAmount.textContent = '-';
-            $itemPrice.textContent = '-';
-            $finalPrice.textContent = '0원';
+            $displayAmount.textContent = "-";
+            $itemPrice.textContent = "-";
+            $finalPrice.textContent = "0원";
         }
-    });
+    };
 
     const log = (...args) => {
-        $logContainer.style.display = 'block';
+        $logContainer.style.display = "block";
         $log.textContent += args.join(" ") + "\n";
         $logContainer.scrollTop = $logContainer.scrollHeight;
     };
 
-    document.getElementById("btn").addEventListener("click", async () => {
-        $log.textContent = "";
-        $logContainer.style.display = 'none';
+    const setBusy = (busy) => {
+        $btn.disabled = busy;
+        $btn.textContent = busy ? "처리 중..." : "결제하기";
+    };
 
-        const orderId = document.getElementById("orderId").value.trim();
-        const amount = Number(document.getElementById("amount").value);
+    const safeText = async (res) => {
+        try { return await res.text(); } catch { return ""; }
+    };
 
-        if (!orderId) {
-            log("❌ 주문번호를 입력해주세요");
-            return;
-        }
-        if (!amount || amount < 1) {
-            log("❌ 결제금액을 1원 이상으로 입력해주세요");
-            return;
-        }
+    const isUuid = (s) => {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+    };
 
-        log("⏳ [1] /api/v1/payments/ready 호출 중...");
-
-        const readyRes = await fetch("/api/v1/payments/ready", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({orderId, amount})
-        });
-
-        if (!readyRes.ok) {
-            const err = await readyRes.text();
-            log("❌ READY 실패:", readyRes.status, err);
-            return;
-        }
-
-        const ready = await readyRes.json();
-        log("✅ [2] READY 응답:", JSON.stringify(ready, null, 2));
-
-        const tossPayments = TossPayments(ready.clientKey);
-        const payment = tossPayments.payment({customerKey: "test-customer-key"});
-
-        log("🚀 [3] 결제창 요청 시작...");
-
-        await payment.requestPayment({
-            method: "CARD",
-            amount: {
-                currency: "KRW",
-                value: ready.amount
-            },
-            orderId: ready.orderId,
-            orderName: ready.orderName,
-            customerName: ready.customerName,
-            successUrl: ready.successUrl,
-            failUrl: ready.failUrl
-        });
+    // ===== Live amount rendering =====
+    $amount.addEventListener("input", (e) => {
+        const value = Number(e.target.value);
+        showAmount(value);
     });
+
+    // ===== Query param preset =====
+    // /toss-test.html?orderId=...&amount=...&auto=1
+    const params = new URLSearchParams(location.search);
+    const presetOrderId = params.get("orderId");
+    const presetAmount = params.get("amount");
+    const auto = params.get("auto");
+
+    if (presetOrderId) $orderId.value = presetOrderId;
+    if (presetAmount) {
+        $amount.value = presetAmount;
+        showAmount(Number(presetAmount));
+    }
+
+    // ===== Main =====
+    $btn.addEventListener("click", async () => {
+        $log.textContent = "";
+        $logContainer.style.display = "none";
+
+        const orderId = $orderId.value.trim();
+        const amount = Number($amount.value);
+
+        if (!orderId) { log("❌ 주문번호를 입력해주세요"); return; }
+        if (!isUuid(orderId)) { log("❌ 주문번호(UUID) 형식이 아닙니다"); return; }
+        if (!amount || amount < 1) { log("❌ 결제금액을 1원 이상으로 입력해주세요"); return; }
+
+        setBusy(true);
+
+        try {
+            log("⏳ [1] /api/v1/payments/ready 호출 중...");
+
+            // same-origin 호출: 페이지가 반드시 서버(8080)에서 서빙되어야 함
+            const readyRes = await fetch("/api/v1/payments/ready", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ orderId, amount })
+            });
+
+            if (!readyRes.ok) {
+                const err = await safeText(readyRes);
+                log("❌ READY 실패:", readyRes.status, err);
+                return;
+            }
+
+            const ready = await readyRes.json();
+            log("✅ [2] READY 응답:\n" + JSON.stringify(ready, null, 2));
+
+            // 필수 필드 검증
+            const required = ["clientKey", "orderId", "amount", "orderName", "customerName", "successUrl", "failUrl"];
+            for (const k of required) {
+                if (ready[k] === undefined || ready[k] === null || ready[k] === "") {
+                    log(`❌ READY 응답에 ${k} 가 없습니다.`);
+                    return;
+                }
+            }
+
+            // Toss 결제창 호출
+            log("🚀 [3] 결제창 요청 시작...");
+
+            const tossPayments = TossPayments(ready.clientKey);
+            const payment = tossPayments.payment({ customerKey: "test-customer-key" });
+
+            await payment.requestPayment({
+                method: "CARD",
+                amount: { currency: "KRW", value: Number(ready.amount) },
+                orderId: ready.orderId,
+                orderName: ready.orderName,
+                customerName: ready.customerName,
+                successUrl: ready.successUrl,
+                failUrl: ready.failUrl,
+            });
+
+            // requestPayment 호출 후에는 보통 toss가 리다이렉트/팝업을 진행하므로 여기까지 오지 않을 수 있음
+            log("ℹ️ 결제창이 열렸습니다. 결제 완료 후 successUrl로 이동합니다.");
+        } catch (e) {
+            log("❌ 예외 발생:", e?.message || String(e));
+            console.error(e);
+        } finally {
+            setBusy(false);
+        }
+    });
+
+    // auto=1이면 자동 실행
+    if (auto === "1") {
+        setTimeout(() => $btn.click(), 300);
+    }
 </script>
 </body>
 </html>
