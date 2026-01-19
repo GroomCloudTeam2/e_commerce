@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-	name = "review_like",
+	name = "p_review_like",
 	uniqueConstraints = {
 		@UniqueConstraint(columnNames = {"review_id", "user_id"})
 	}

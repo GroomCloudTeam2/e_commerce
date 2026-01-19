@@ -17,9 +17,14 @@ import com.groom.e_commerce.global.infrastructure.config.security.CustomUserDeta
 import com.groom.e_commerce.order.application.service.OrderService;
 import com.groom.e_commerce.order.presentation.dto.request.OrderCreateRequest;
 import com.groom.e_commerce.order.presentation.dto.request.OrderStatusChangeRequest;
+import com.groom.e_commerce.order.presentation.dto.response.OrderCreateResponse;
 import com.groom.e_commerce.order.presentation.dto.response.OrderResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -31,9 +36,13 @@ public class OrderController {
 
 	private final OrderService orderService;
 
-	@Operation(summary = "주문 생성", description = "인증된 사용자의 정보로 주문을 생성합니다.") // 2. 메서드 설명
+	@Operation(summary = "주문 생성", description = "인증된 사용자의 정보로 주문을 생성합니다.")// 2. 메서드 설명
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "주문 생성 성공",
+			content = @Content(schema = @Schema(implementation = UUID.class, example = "7ba12345-1234-1234-1234-123456789abc")))
+	})
 	@PostMapping
-	public ResponseEntity<UUID> createOrder(
+	public ResponseEntity<OrderCreateResponse> createOrder(
 		@RequestBody OrderCreateRequest request,
 		// @RequestHeader("X-User-Id") UUID userId, // 나중에 게이트웨이에서 헤더로 넘어옴
 		@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -41,7 +50,7 @@ public class OrderController {
 		UUID buyerId = userDetails.getUserId();
 
 		UUID orderId = orderService.createOrder(buyerId, request);
-		return ResponseEntity.ok(orderId);
+		return ResponseEntity.ok(new OrderCreateResponse(orderId));
 	}
 
 	@GetMapping("/{orderId}")

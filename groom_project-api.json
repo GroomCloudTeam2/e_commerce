@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Review & AI Review API",
-    "version": "1.0.0",
-    "description": "JWT 인증 기반 리뷰 API"
+    "title": "Review API",
+    "version": "1.1.0",
+    "description": "리뷰 + AI 리뷰 요약 API (JWT 기반)"
   },
   "servers": [
     { "url": "http://localhost:8080" }
@@ -12,12 +12,81 @@
     { "bearerAuth": [] }
   ],
   "paths": {
-    "/reviews/items/{productId}/": {
+
+
+    "/api/v1/admin/reviews/{productId}/ai-summary": {
       "post": {
-        "summary": "주문 상품 리뷰 작성",
-        "description": "토큰의 사용자 정보를 사용하여 특정 상품에 대한 리뷰를 작성합니다.",
+        "summary": "관리자 AI 리뷰 요약 재생성",
+        "tags": ["Admin Review"],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "AI 리뷰 요약 생성 요청 성공" },
+          "401": { "description": "인증 실패" },
+          "403": { "description": "관리자 권한 필요" }
+        }
+      }
+    },
+
+
+    "/api/v1/reviews/product/{productId}/": {
+      "get": {
+        "summary": "상품 리뷰 목록 + AI 리뷰",
+        "description": "비로그인 사용자도 조회 가능",
+        "tags": ["Product Review"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["latest", "rating", "like"],
+              "default": "latest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductReviewResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v1/reviews/{orderId}/items/{productId}": {
+      "post": {
+        "summary": "내 주문 상품 리뷰 작성",
         "tags": ["Review"],
         "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
           { "name": "productId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
         ],
         "requestBody": {
@@ -30,59 +99,101 @@
         },
         "responses": {
           "201": { "description": "리뷰 생성 성공" },
-          "401": { "description": "인증 실패 (JWT 누락 또는 만료)" }
+          "401": { "description": "인증 실패" }
         }
       }
     },
-    "/reviews/item/{productId}/": {
+
+    "/api/v1/reviews/me/{reviewId}": {
       "get": {
-        "summary": "상품 리뷰 목록 및 통계 조회",
-        "description": "해당 상품의 모든 리뷰를 페이징하여 조회합니다. (비로그인 가능)",
+        "summary": "내 리뷰 단건 조회",
         "tags": ["Review"],
-        "security": [],
         "parameters": [
-          { "name": "productId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0 } },
-          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10 } }
+          { "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
         ],
         "responses": {
           "200": {
             "description": "조회 성공",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "avgRating": { "type": "number", "format": "double" },
-                    "reviewCount": { "type": "integer" },
-                    "aiReview": { "type": "string", "nullable": true },
-                    "reviews": { "type": "array", "items": { "$ref": "#/components/schemas/Review" } },
-                    "pagination": { "$ref": "#/components/schemas/Pagination" }
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/ReviewResponse" }
               }
             }
           }
         }
       }
     },
-    "/reviews/{reviewId}": {
+
+    "/api/v1/reviews/me": {
+      "get": {
+        "summary": "내 리뷰 목록 조회",
+        "tags": ["Review"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "조회 성공" }
+        }
+      }
+    },
+
+    "/api/v1/reviews/{reviewId}": {
+      "put": {
+        "summary": "내 리뷰 수정",
+        "tags": ["Review"],
+        "parameters": [
+          { "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateReviewRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "수정 성공" }
+        }
+      },
       "delete": {
-        "summary": "리뷰 삭제",
-        "description": "토큰의 사용자 정보와 리뷰 작성자를 대조하여 본인인 경우에만 삭제합니다.",
+        "summary": "권한 기반 리뷰 삭제",
         "tags": ["Review"],
         "parameters": [
           { "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
         ],
         "responses": {
           "204": { "description": "삭제 성공" },
-          "401": { "description": "인증 실패" },
-          "403": { "description": "권한 없음 (작성자 불일치)" },
-          "404": { "description": "리뷰 없음" }
+          "403": { "description": "권한 없음" }
+        }
+      }
+    },
+
+    "/api/v1/reviews/{reviewId}/like": {
+      "post": {
+        "summary": "리뷰 좋아요",
+        "tags": ["Review"],
+        "parameters": [
+          { "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "좋아요 수 반환" }
+        }
+      },
+      "delete": {
+        "summary": "리뷰 좋아요 취소",
+        "tags": ["Review"],
+        "parameters": [
+          { "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "좋아요 수 반환" }
         }
       }
     }
   },
+
   "components": {
     "securitySchemes": {
       "bearerAuth": {
@@ -91,37 +202,47 @@
         "bearerFormat": "JWT"
       }
     },
+
     "schemas": {
-      "Review": {
+      "CreateReviewRequest": {
+        "type": "object",
+        "required": ["rating", "content"],
+        "properties": {
+          "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "content": { "type": "string" }
+        }
+      },
+
+      "UpdateReviewRequest": {
+        "type": "object",
+        "properties": {
+          "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "content": { "type": "string" }
+        }
+      },
+
+      "ReviewResponse": {
         "type": "object",
         "properties": {
           "reviewId": { "type": "string", "format": "uuid" },
-          "orderId": { "type": "string", "format": "uuid" },
+          "productId": { "type": "string", "format": "uuid" },
           "rating": { "type": "integer" },
           "content": { "type": "string" },
-          "category": { "$ref": "#/components/schemas/ReviewCategory" }
+          "likeCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       },
-      "Pagination": {
+
+      "ProductReviewResponse": {
         "type": "object",
         "properties": {
-          "totalElements": { "type": "integer" },
-          "totalPages": { "type": "integer" },
-          "currentPage": { "type": "integer" },
-          "isLast": { "type": "boolean" }
-        }
-      },
-      "ReviewCategory": {
-        "type": "string",
-        "enum": ["PRICE", "DESIGN", "PERFORMANCE", "CONVENIENCE", "QUALITY"]
-      },
-      "CreateReviewRequest": {
-        "type": "object",
-        "required": ["orderId", "rating", "content"],
-        "properties": {
-          "orderId": { "type": "string", "format": "uuid" },
-          "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
-          "content": { "type": "string" }
+          "avgRating": { "type": "number", "format": "double" },
+          "reviewCount": { "type": "integer" },
+          "aiReview": { "type": "string", "nullable": true },
+          "reviews": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReviewResponse" }
+          }
         }
       }
     }

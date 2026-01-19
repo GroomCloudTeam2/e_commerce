@@ -65,6 +65,9 @@ dependencies {
     // Testcontainers
     testImplementation 'org.testcontainers:junit-jupiter:1.19.7'
     testImplementation 'org.testcontainers:postgresql:1.19.7'
+
+    testImplementation 'io.rest-assured:rest-assured'
+
 }
 
 tasks.named('test') {

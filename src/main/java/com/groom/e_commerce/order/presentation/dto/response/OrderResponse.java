@@ -8,9 +8,14 @@ import java.util.UUID;
 import com.groom.e_commerce.order.domain.entity.Order;
 import com.groom.e_commerce.order.domain.status.OrderStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public record OrderResponse(
+	@Schema(description = "주문 ID", example = "order_uuid_1234")
 	UUID orderId,
+	@Schema(description = "주문 번호", example = "20240105-0001")
 	String orderNo,
+	@Schema(description = "주문 상태", example = "PENDING")
 	OrderStatus status,
 	Long totalAmount,
 	LocalDateTime orderedAt,

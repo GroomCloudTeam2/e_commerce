@@ -40,6 +40,7 @@ ai:
 
 logging:
   level:
+    root: ERROR
     com.groom.ecommerce: DEBUG
     org.hibernate.SQL: DEBUG
 
